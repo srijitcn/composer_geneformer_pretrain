@@ -21,7 +21,8 @@ from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageMod
 import geneformer
 import sys
 sys.path.extend(geneformer.__path__)
-from geneformer import GeneformerPreCollator
+
+from pretrain import GeneformerPreCollator
 
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
