@@ -17,9 +17,10 @@ import torch
 from datasets import load_from_disk
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
+
+import geneformer
 import sys
 sys.path.extend(geneformer.__path__)
-
 from geneformer import GeneformerPreCollator
 
 #### Env variables
