@@ -83,15 +83,14 @@ training_output_dir = f"{rootdir}/models/{run_name}/"
 logging_dir = f"{rootdir}/runs/{run_name}/"
 model_output_dir = os.path.join(training_output_dir, "models/")
 
-
 # ensure not overwriting previously saved model
 model_output_file = os.path.join(model_output_dir, "pytorch_model.bin")
 if os.path.isfile(model_output_file) is True:
     raise Exception("Model already saved to this directory.")
 
 # make training and model output directories
-subprocess.call(f"mkdir {training_output_dir}", shell=True)
-subprocess.call(f"mkdir {model_output_dir}", shell=True)
+subprocess.call(f"mkdir -p {training_output_dir}", shell=True)
+subprocess.call(f"mkdir -p {model_output_dir}", shell=True)
 
 with open(f"{datadir}/token_dictionary.pkl", "rb") as fp:
     token_dictionary = pickle.load(fp)

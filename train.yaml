@@ -19,8 +19,8 @@ command: |
 
   curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/resolve/main/token_dictionary.pkl\?download\=true -o token_dictionary.pkl  
 
-  mkdir train_dataset
-  cd train_dataset
+  mkdir dataset
+  cd dataset
   curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/dataset.arrow -o dataset.arrow
   curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/dataset_info.json -o dataset_info.json
   curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/state.json -o state.json
