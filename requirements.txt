@@ -1,0 +1,10 @@
+mosaicml==0.23.5
+mosaicml-streaming
+datasets
+einops
+torch
+omegaconf
+transformers
+mlflow
+evaluate
+accelerate
