@@ -8,7 +8,6 @@ integrations:
   ssh_clone: true # Should be true if using a private repo
 
 command: |
-  git lfs install
   git clone https://huggingface.co/ctheodoris/Geneformer
   cd Geneformer
   pip install .
