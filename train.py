@@ -21,6 +21,7 @@ from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageMod
 import geneformer
 import sys
 sys.path.extend(geneformer.__path__)
+print(sys.path)
 
 from pretrain import GeneformerPreCollator
 
