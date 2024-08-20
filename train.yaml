@@ -1,0 +1,22 @@
+name: multi-gpu-test
+image: mosaicml/pytorch:2.2.2_cu121-python3.11-ubuntu20.04
+
+integrations:
+- integration_type: git_repo
+  git_repo: srijitcn/composer_geneformer_pretrain
+  git_branch: main # use your branch
+  ssh_clone: true # Should be true if using a private repo
+
+command: |
+  git clone https://huggingface.co/ctheodoris/Geneformer
+  cd Geneformer
+  pip install -e .
+
+  cd ../composer_geneformer_pretrain
+  pip install -r requirements.txt
+  
+  composer -n 8 train.py
+
+compute:
+  gpus: 8
+  cluster: r8z11
