@@ -12,7 +12,7 @@ command: |
   apt-get install git-lfs
   git clone https://huggingface.co/ctheodoris/Geneformer
   cd Geneformer
-  pip install -e .
+  pip install .
 
   cd ../composer_geneformer_pretrain
   mkdir output
