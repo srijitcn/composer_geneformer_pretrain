@@ -26,9 +26,9 @@ command: |
 
   mkdir dataset
   cd dataset
-  curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/dataset.arrow -o dataset.arrow
-  curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/dataset_info.json -o dataset_info.json
-  curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/state.json -o state.json
+  curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/dataset.arrow -o genecorpus_30M_2048.dataset/dataset.arrow
+  curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/dataset_info.json -o genecorpus_30M_2048.dataset/dataset_info.json
+  curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/state.json -o genecorpus_30M_2048.dataset/state.json
   curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048_lengths.pkl -o genecorpus_30M_2048_lengths.pkl
 
   cd ../..
