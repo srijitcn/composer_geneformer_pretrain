@@ -31,7 +31,7 @@ torch.cuda.manual_seed_all(seed_val)
 # set local time/directories
 timezone = pytz.timezone("US/Eastern")
 rootdir = "output"
-datadir - "data"
+datadir = "data"
 
 # set model parameters
 # model type
