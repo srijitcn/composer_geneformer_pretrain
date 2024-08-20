@@ -16,7 +16,8 @@ command: |
   mkdir data
   cd data
   curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/resolve/main/token_dictionary.pkl\?download\=true -o token_dictionary.pkl  
-  
+
+  cd ..
   pip install -r requirements.txt
   
   composer -n 8 train.py
