@@ -1,4 +1,4 @@
-import Geneformer
+
 from geneformer import GeneformerPreCollator
 
 ##1 Set parameters
