@@ -7,10 +7,6 @@ import datetime
 # imports
 import os
 
-os.environ["NCCL_DEBUG"] = "INFO"
-os.environ["OMPI_MCA_opal_cuda_support"] = "true"
-os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
-
 import pickle
 import random
 import subprocess
@@ -20,6 +16,13 @@ import pytz
 import torch
 from datasets import load_from_disk
 from transformers import BertConfig, BertForMaskedLM, TrainingArguments
+
+from geneformer import GeneformerPretrainer
+
+#### Env variables
+os.environ["NCCL_DEBUG"] = "INFO"
+os.environ["OMPI_MCA_opal_cuda_support"] = "true"
+os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
 seed_num = 0
 random.seed(seed_num)
@@ -115,5 +118,9 @@ config = BertConfig(**config)
 model = BertForMaskedLM(config)
 
 print(model)
+
+tokenizer()
+
+
 
 print("*************Done")
