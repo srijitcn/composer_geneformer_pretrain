@@ -17,8 +17,7 @@ import torch
 from datasets import load_from_disk
 from transformers import BertConfig, BertForMaskedLM, TrainingArguments
 
-#from geneformer import GeneformerPretrainer
-import geneformer
+from geneformer import GeneformerPretrainer
 
 print(f"TOKEN_DICTIONARY_FILE: {geneformer.TOKEN_DICTIONARY_FILE}")
 
