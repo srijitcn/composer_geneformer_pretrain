@@ -23,7 +23,7 @@ import sys
 sys.path.extend(geneformer.__path__)
 print(sys.path)
 
-from pretrain import GeneformerPreCollator
+from pretrainer import GeneformerPreCollator
 
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
