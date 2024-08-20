@@ -19,8 +19,6 @@ from transformers import BertConfig, BertForMaskedLM, TrainingArguments
 
 from geneformer import GeneformerPretrainer
 
-print(f"TOKEN_DICTIONARY_FILE: {geneformer.TOKEN_DICTIONARY_FILE}")
-
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
 os.environ["OMPI_MCA_opal_cuda_support"] = "true"

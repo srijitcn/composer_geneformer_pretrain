@@ -30,7 +30,6 @@ command: |
   cd ../..
   pip install -r requirements.txt
   
-  ls -al /usr/lib/python3/dist-packages/geneformer/
   composer -n 8 train.py
 
 compute:
