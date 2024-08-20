@@ -114,3 +114,6 @@ config = {
 config = BertConfig(**config)
 model = BertForMaskedLM(config)
 
+print(model)
+
+print("*************Done")
