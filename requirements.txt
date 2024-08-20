@@ -2,5 +2,3 @@ mosaicml==0.23.5
 mosaicml-streaming
 dataset
 deepspeed
-peft
-optuna

@@ -15,9 +15,9 @@ import numpy as np
 import pytz
 import torch
 from datasets import load_from_disk
-from transformers import BertConfig, BertForMaskedLM, TrainingArguments
+from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
-from geneformer import GeneformerPretrainer
+from geneformer import GeneformerPreCollator
 
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
@@ -77,6 +77,10 @@ optimizer = "adamw"
 # weight_decay
 weight_decay = 0.001
 
+mlm_probability = 0.15
+
+dataset_file = f"{datadir}/dataset/genecorpus_30M_2048.dataset"
+example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
 
 # output directories
 current_date = datetime.datetime.now(tz=timezone)
@@ -116,11 +120,22 @@ config = {
 }
 config = BertConfig(**config)
 model = BertForMaskedLM(config)
-
+tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
 print(model)
 
-tokenizer()
 
+##3 Prepare dataset
+dataset = load_from_disk(dataset_file)
+print(dataset[0])
+
+with open(example_lengths_file, "rb") as f:
+    example_lengths = pickle.load(f)
+
+data_collator = DataCollatorForLanguageModeling(
+                tokenizer=tokenizer, 
+                mlm=True, 
+                mlm_probability=mlm_probability
+            )
 
 
 print("*************Done")
