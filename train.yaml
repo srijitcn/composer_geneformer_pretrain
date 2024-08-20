@@ -8,9 +8,11 @@ integrations:
   ssh_clone: true # Should be true if using a private repo
 
 command: |
+  curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+  apt-get install git-lfs
   git clone https://huggingface.co/ctheodoris/Geneformer
   cd Geneformer
-  pip install .
+  pip install -e .
 
   cd ../composer_geneformer_pretrain
   mkdir output

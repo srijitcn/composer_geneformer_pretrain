@@ -3,3 +3,4 @@ mosaicml-streaming
 dataset
 deepspeed
 peft
+optuna
