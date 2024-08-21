@@ -136,6 +136,7 @@ config = {
 config = BertConfig(**config)
 model = BertForMaskedLM(config)
 tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
+model.train()
 print(model)
 
 
