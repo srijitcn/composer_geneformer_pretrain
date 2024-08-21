@@ -16,6 +16,8 @@ import pytz
 
 import torch
 from torch.utils.data import DataLoader
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import LinearLR
 
 from datasets import load_from_disk
 from datasets.dataset_dict import DatasetDict
@@ -28,6 +30,7 @@ from geneformer.pretrainer import GeneformerPreCollator
 
 from composer.models.huggingface import HuggingFaceModel
 from composer.utils import dist
+from composer import Trainer
 from streaming import MDSWriter, StreamingDataset
 
 
@@ -189,21 +192,15 @@ with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zst
 
 print("Conversion to streaming dataset conpleted")
 
+
+#4 Start training
+
 streaming_dataset = StreamingDataset(streaming_dataset_cache_location, streaming_dataset_location)
-
-
 
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
-
 #Prepare composer model
 composer_model = HuggingFaceModel(model, tokenizer=tokenizer)
-
-
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import LinearLR
-import torch
-from composer import Trainer
 
 optimizer = AdamW(
     params=composer_model.parameters(),
@@ -219,7 +216,7 @@ linear_lr_decay = LinearLR(
 # Create Trainer Object
 trainer = Trainer(
     model=composer_model, # This is the model from the HuggingFaceModel wrapper class.
-    train_dataloader=train_dataloader,
+    train_dataloader=DataLoader(dataset=streaming_dataset),
     eval_dataloader=None,
     max_duration="2ep",
     optimizers=optimizer,
