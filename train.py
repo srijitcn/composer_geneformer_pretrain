@@ -36,8 +36,8 @@ torch.cuda.manual_seed_all(seed_val)
 
 # set local time/directories
 timezone = pytz.timezone("US/Eastern")
-rootdir = "output"
-datadir = "data"
+rootdir = "/Geneformer/output"
+datadir = "/Geneformer/data"
 
 # set model parameters
 # model type
