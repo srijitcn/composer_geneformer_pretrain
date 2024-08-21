@@ -191,17 +191,17 @@ trainer = Trainer(
     save_overwrite=True,
     run_name=run_name,
     seed=seed_val,
-    #deepspeed_config={
-    #    "train_batch_size": 8,
-    #    "fp16": {"enabled": True},
-    #}
+    deepspeed_config={
+        "train_batch_size": 8,
+        "fp16": {"enabled": True},
+    }
 )
 # Start training
 trainer.fit()
 
 print(trainer.state.train_metrics)
 
-trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
+#trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
 
 print(f"Trained model available at : {model_output_dir}")
 
