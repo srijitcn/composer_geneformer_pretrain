@@ -24,7 +24,7 @@ print(dataset)
 ###*******************************************************************************************************************
 # Split dataset into train and validation sets
 train_test_split = dataset.train_test_split(test_size=0.1)
-train_dataset = train_test_split["train"].select(range(1000))
+train_dataset = train_test_split["train"]
 test_dataset = train_test_split["test"]
 
 with open(example_lengths_file, "rb") as f:
@@ -48,7 +48,7 @@ train_dataloader = DataLoader(train_dataset,
                         drop_last=False, 
                         sampler=sampler)
 
-dataset_list = train_dataset.to_pandas().to_dict('records')
+#dataset_list = train_dataset.to_pandas().to_dict('records')
 
 # Save the samples as shards using MDSWriter
 #with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
@@ -60,7 +60,7 @@ dataset_list = train_dataset.to_pandas().to_dict('records')
 
 with MDSWriter(out=f"{streaming_dataset_location}_batched", columns=columns, compression='zstd') as out:
     batch_iter = iter(train_dataloader)
-    for i in range( int( len(train_dataset)/geneformer_batch_size ) + 1 ):
+    for i in range(10): # int( len(train_dataset)/geneformer_batch_size ) + 1 ):
         batch = next(batch_iter)
         print(batch)
 #        sample = next(sample_iter)
