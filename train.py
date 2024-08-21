@@ -179,16 +179,11 @@ sampler = LengthGroupedSampler(
                 lengths=example_lengths,
                 generator=generator,
             )
-train_dataloader = DataLoader(train_dataset,
-                              shuffle=False, 
-                              drop_last=False, 
-                              sampler=sampler,
-                              collate_fn=data_collator)
 
 # Save the samples as shards using MDSWriter
 with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
     for i in range( int(len(train_dataset)/geneformer_batch_size) ):
-        out.write( next(iter(train_dataloader)) )
+        out.write( next(iter(sampler)) )
 
 print("Conversion to streaming dataset conpleted")
 
@@ -212,11 +207,16 @@ linear_lr_decay = LinearLR(
     end_factor=0, total_iters=150
 )
 
+train_dataloader = DataLoader(streaming_dataset,
+                        shuffle=False, 
+                        drop_last=False, 
+                        sampler=sampler,
+                        collate_fn=data_collator)
 
 # Create Trainer Object
 trainer = Trainer(
     model=composer_model, # This is the model from the HuggingFaceModel wrapper class.
-    train_dataloader=DataLoader(dataset=streaming_dataset),
+    train_dataloader=train_dataloader,
     eval_dataloader=None,
     max_duration="2ep",
     optimizers=optimizer,
