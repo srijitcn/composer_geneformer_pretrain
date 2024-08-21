@@ -188,4 +188,6 @@ trainer = Trainer(
 # Start training
 trainer.fit()
 
+print(trainer.state.train_metrics)
+
 print("*************Done")

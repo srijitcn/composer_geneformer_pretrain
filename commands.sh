@@ -29,3 +29,4 @@ mkdir /composer_output
 
 cd /composer_geneformer_pretrain
 pip install -r requirements.txt
+

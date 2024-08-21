@@ -9,7 +9,7 @@ integrations:
 
 command: |
   cd composer_geneformer_pretrain
-  sh ./commands.sh  
+  sh ./commands.sh
   composer -n 8 train.py
 
 compute:
