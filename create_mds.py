@@ -7,7 +7,7 @@ streaming_dataset_location = f"{datadir}/streaming/genecorpus_30M_2048.dataset"
 
 columns = {
     'input_ids': "ndarray",
-    'lengths': 'int'
+    'length': 'int'
 }
 
 ##3 Prepare dataset
@@ -28,6 +28,6 @@ with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zst
     for x in dataset_list:
         out.write({
             "input_ids" : x["input_ids"],
-            "lengths" : x["lengths"]
+            "length" : x["length"]
         })
 
