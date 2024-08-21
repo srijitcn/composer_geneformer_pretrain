@@ -145,7 +145,7 @@ streaming_dataset = StreamingDataset(local=streaming_dataset_location,batch_size
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
 #Prepare composer model
-composer_model = HuggingFaceModel(model, tokenizer=tokenizer)
+composer_model = HuggingFaceModel(model)
 
 optimizer = AdamW(
     params=composer_model.parameters(),
