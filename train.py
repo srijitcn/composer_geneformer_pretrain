@@ -149,7 +149,7 @@ print(model)
 
 ##3 Prepare dataset
 dataset = load_from_disk(dataset_file)
-print(dataset[0])
+print(dataset)
 
 with open(example_lengths_file, "rb") as f:
     example_lengths = pickle.load(f)
