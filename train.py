@@ -139,13 +139,8 @@ tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
 print(model)
 
 
-##3 Prepare dataset
-dataset = load_from_disk(dataset_file)
-print(dataset)
-
-
 #Create streaming dataset
-streaming_dataset = StreamingDataset(streaming_dataset_cache_location, streaming_dataset_location)
+streaming_dataset = StreamingDataset(streaming_dataset_location)
 
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
