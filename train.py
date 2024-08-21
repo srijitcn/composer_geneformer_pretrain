@@ -187,7 +187,7 @@ train_dataloader = DataLoader(train_dataset,
 
 # Save the samples as shards using MDSWriter
 with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-    for i in range( len(train_dataset)/geneformer_batch_size ):
+    for i in range( int(len(train_dataset)/geneformer_batch_size) ):
         out.write( next(iter(train_dataloader)) )
 
 print("Conversion to streaming dataset conpleted")
