@@ -186,7 +186,7 @@ trainer = Trainer(
     schedulers=[linear_lr_decay],
     device="gpu" ,
     train_subset_num_batches=150,
-    save_folder=model_output_dir,
+    save_folder=logging_dir,
     save_interval="1ep",
     save_overwrite=True,
     run_name=run_name,
@@ -200,6 +200,8 @@ trainer = Trainer(
 trainer.fit()
 
 print(trainer.state.train_metrics)
+
+trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
 
 print(f"Trained model available at : {model_output_dir}")
 
