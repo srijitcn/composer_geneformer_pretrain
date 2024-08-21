@@ -27,8 +27,10 @@ import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
 
 from composer.models.huggingface import HuggingFaceModel
-from composer.utils import dist
+from composer.utils import reproducibility
 from composer import Trainer
+
+
 from streaming import MDSWriter, StreamingDataset
 
 
@@ -133,6 +135,13 @@ config = {
     "pad_token_id": token_dictionary.get("<pad>"),
     "vocab_size": len(token_dictionary),  # genes+2 for <mask> and <pad> tokens
 }
+
+### Load model
+
+reproducibility.configure_deterministic_mode()
+reproducibility.seed_all(42)
+
+
 config = BertConfig(**config)
 model = BertForMaskedLM(config)
 tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
