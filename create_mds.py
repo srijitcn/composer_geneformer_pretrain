@@ -43,25 +43,25 @@ sampler = LengthGroupedSampler(
             )
 
 
-#dataset_list = train_dataset.to_pandas().to_dict('records')
+dataset_list = train_dataset.to_pandas().to_dict('records')
 
 # Save the samples as shards using MDSWriter
-#with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-#    for x in dataset_list:
-#        out.write({
-#            "input_ids" : x["input_ids"],
-#            "length" : x["length"]
-#        })
-
 with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-    sample_iter = iter(sampler)
-    for i in range( int( len(train_dataset)/geneformer_batch_size ) + 1 ):
-        sample = next(sample_iter)
-        print(sample)
-        for x in sample:
-            out.write({
-                "input_ids" : x["input_ids"],
-                "length" : x["length"]
-            })
+    for x in dataset_list:
+        out.write({
+            "input_ids" : x["input_ids"],
+            "length" : x["length"]
+        })
+
+#with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
+#    sample_iter = iter(sampler)
+#    for i in range( int( len(train_dataset)/geneformer_batch_size ) + 1 ):
+#        sample = next(sample_iter)
+#        print(sample)
+#        for x in sample:
+#            out.write({
+#                "input_ids" : x["input_ids"],
+#                "length" : x["length"]
+#            })
 
 
