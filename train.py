@@ -43,8 +43,6 @@ seed_num = 0
 random.seed(seed_num)
 np.random.seed(seed_num)
 seed_val = 42
-torch.manual_seed(seed_val)
-torch.cuda.manual_seed_all(seed_val)
 
 # set local time/directories
 timezone = pytz.timezone("US/Eastern")
@@ -139,7 +137,7 @@ config = {
 ### Load model
 
 reproducibility.configure_deterministic_mode()
-reproducibility.seed_all(42)
+reproducibility.seed_all(seed_val)
 
 
 config = BertConfig(**config)
@@ -188,12 +186,13 @@ trainer = Trainer(
     max_duration="2ep",
     optimizers=optimizer,
     schedulers=[linear_lr_decay],
-    device='gpu' ,
+    device="gpu" ,
     train_subset_num_batches=150,
     save_folder="checkpoints",
     save_interval="1ep",
     save_overwrite=True,
-    seed=17,
+    run_name=run_name,
+    seed=seed_val,
     deepspeed_config={
         "train_batch_size": 8,
         "fp16": {"enabled": True},
@@ -203,5 +202,7 @@ trainer = Trainer(
 trainer.fit()
 
 print(trainer.state.train_metrics)
+
+trainer.save_model(model_output_dir)
 
 print("*************Done")
