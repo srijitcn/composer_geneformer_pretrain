@@ -203,7 +203,5 @@ trainer.fit()
 
 print(trainer.state.train_metrics)
 
-print(f"Saving trained model to : {model_output_dir}")
-trainer.save_model(model_output_dir)
 
 print("*************Done")
