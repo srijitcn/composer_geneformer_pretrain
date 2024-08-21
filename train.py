@@ -184,7 +184,11 @@ trainer = Trainer(
     save_folder="checkpoints",
     save_interval="1ep",
     save_overwrite=True,
-    seed=17
+    seed=17,
+    deepspeed_config={
+        "train_batch_size": geneformer_batch_size,
+        "fp16": {"enabled": True},
+    }
 )
 # Start training
 trainer.fit()
