@@ -23,7 +23,7 @@ print(dataset)
 ###*******************************************************************************************************************
 # Split dataset into train and validation sets
 train_test_split = dataset.train_test_split(test_size=0.1)
-train_dataset = train_test_split["train"].select(range(1000))
+train_dataset = train_test_split["train"] #.select(range(1000))
 test_dataset = train_test_split["test"]
 
 with open(example_lengths_file, "rb") as f:
