@@ -20,7 +20,6 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import LinearLR
 
 from datasets import load_from_disk
-from datasets.dataset_dict import DatasetDict
 
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 from transformers.trainer_pt_utils import LengthGroupedSampler
