@@ -16,18 +16,24 @@ import pytz
 
 import torch
 from torch.utils.data import DataLoader
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import LinearLR
+
 
 from datasets import load_from_disk
 from datasets.dataset_dict import DatasetDict
 
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
-
+from transformers.trainer_pt_utils import LengthGroupedSampler
 
 import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
 
 from composer.models.huggingface import HuggingFaceModel
 from composer.utils import dist
+from composer import Trainer
+from streaming import MDSWriter, StreamingDataset
+
 
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
@@ -90,7 +96,16 @@ weight_decay = 0.001
 mlm_probability = 0.15
 
 dataset_file = f"{datadir}/dataset/genecorpus_30M_2048.dataset"
+streaming_dataset_location = f"{datadir}/streaming/genecorpus_30M_2048.dataset"
+streaming_dataset_cache_location = f"{datadir}/streaming/cache"
 example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
+
+#dataset columns
+dataset_columns = {
+    'input_ids': 'int',
+    'lengths': 'int'
+}
+
 
 # output directories
 current_date = datetime.datetime.now(tz=timezone)
@@ -152,24 +167,32 @@ data_collator = DataCollatorForLanguageModeling(
     )
 
 
-sampler = dist.get_sampler(dataset, shuffle=True)
-train_dataloader = DataLoader(train_test_split["train"], 
-                              batch_size=geneformer_batch_size, 
-                              shuffle=False, 
-                              drop_last=False, 
-                              sampler=sampler,
+sampler = LengthGroupedSampler(
+                dataset=train_test_split["train"],
+                batch_size=geneformer_batch_size,
+                lengths=example_lengths,
+                #generator=generator,
+            )
+
+
+##Create streaming dataset
+# Save the samples as shards using MDSWriter
+with MDSWriter(out=streaming_dataset_location, columns=dataset_columns, compression='zstd') as out:
+    for sample in sampler:
+        out.write(sample)
+
+print("Conversion to streaming dataset conpleted")
+
+streaming_dataset = StreamingDataset(streaming_dataset_cache_location, streaming_dataset_location)
+
+train_dataloader = DataLoader(streaming_dataset,
                               collate_fn=data_collator)
+
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
 
 #Prepare composer model
 composer_model = HuggingFaceModel(model, tokenizer=tokenizer)
-
-
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import LinearLR
-import torch
-from composer import Trainer
 
 optimizer = AdamW(
     params=composer_model.parameters(),
