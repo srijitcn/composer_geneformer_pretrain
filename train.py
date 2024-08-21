@@ -22,7 +22,6 @@ from torch.optim.lr_scheduler import LinearLR
 from datasets import load_from_disk
 
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
-from transformers.trainer_pt_utils import LengthGroupedSampler
 
 import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
@@ -98,12 +97,6 @@ streaming_dataset_location = f"{datadir}/streaming/genecorpus_30M_2048.dataset"
 streaming_dataset_cache_location = f"{datadir}/streaming/cache"
 example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
 
-##Create streaming dataset
-columns = {
-    'input_ids': "ndarray",
-    'lengths': 'int'
-}
-
 # output directories
 current_date = datetime.datetime.now(tz=timezone)
 datestamp = f"{str(current_date.year)[-2:]}{current_date.month:02d}{current_date.day:02d}_{current_date.strftime('%X').replace(':','')}"
@@ -150,28 +143,8 @@ print(model)
 dataset = load_from_disk(dataset_file)
 print(dataset)
 
-with open(example_lengths_file, "rb") as f:
-    example_lengths = pickle.load(f)
 
-###*******************************************************************************************************************
-# Split dataset into train and validation sets
-train_test_split = dataset.train_test_split(test_size=0.1)
-train_dataset = train_test_split["train"]
-test_dataset = train_test_split["test"]
-
-dataset_list = train_dataset.to_pandas().to_dict('records')
-
-# Save the samples as shards using MDSWriter
-with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-    for x in dataset_list:
-        print("x")
-        out.write(x)
-
-print("Conversion to streaming dataset conpleted")
-
-
-#4 Start training
-
+#Create streaming dataset
 streaming_dataset = StreamingDataset(streaming_dataset_cache_location, streaming_dataset_location)
 
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
@@ -189,18 +162,6 @@ linear_lr_decay = LinearLR(
     end_factor=0, total_iters=150
 )
 
-#Get a sampler
-generator = torch.Generator()
-generator.manual_seed(
-    int(torch.empty((), dtype=torch.int64).random_().item())
-)
-sampler = LengthGroupedSampler(
-                dataset=train_dataset,
-                batch_size=geneformer_batch_size,
-                lengths=example_lengths,
-                generator=generator,
-            )
-
 #data collator
 data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, 
@@ -211,7 +172,7 @@ data_collator = DataCollatorForLanguageModeling(
 train_dataloader = DataLoader(streaming_dataset,
                         shuffle=False, 
                         drop_last=False, 
-                        sampler=sampler,
+                        #sampler=sampler,
                         collate_fn=data_collator)
 
 # Create Trainer Object
