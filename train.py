@@ -165,6 +165,7 @@ dataset_list = train_dataset.to_pandas().to_dict('records')
 # Save the samples as shards using MDSWriter
 with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
     for x in dataset_list:
+        print("x")
         out.write(x)
 
 print("Conversion to streaming dataset conpleted")
