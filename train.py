@@ -27,6 +27,7 @@ import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
 
 from composer.models.huggingface import HuggingFaceModel
+from composer.utils import dist
 
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
@@ -140,11 +141,9 @@ print(dataset[0])
 with open(example_lengths_file, "rb") as f:
     example_lengths = pickle.load(f)
 
+###*******************************************************************************************************************
 # Split dataset into train and validation sets
 train_test_split = dataset.train_test_split(test_size=0.1)
-dataset_dict = DatasetDict({
-    "train": train_test_split["train"],
-    "test": train_test_split["test"]})
 
 data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, 
@@ -152,8 +151,15 @@ data_collator = DataCollatorForLanguageModeling(
         mlm_probability=mlm_probability
     )
 
-train_dataloader = DataLoader(train_test_split["train"], batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
-eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
+
+sampler = dist.get_sampler(dataset, shuffle=True)
+train_dataloader = DataLoader(train_test_split["train"], 
+                              batch_size=geneformer_batch_size, 
+                              shuffle=False, 
+                              drop_last=False, 
+                              sampler=sampler,
+                              collate_fn=data_collator)
+#eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
 
 #Prepare composer model
