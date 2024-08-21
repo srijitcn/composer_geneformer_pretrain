@@ -160,30 +160,12 @@ train_test_split = dataset.train_test_split(test_size=0.1)
 train_dataset = train_test_split["train"]
 test_dataset = train_test_split["test"]
 
-data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, 
-        mlm=True, 
-        mlm_probability=mlm_probability
-    )
-
-
-#we will use the dataloader and sampler to create samples for converting into streaming dataset
-#Get a sampler
-generator = torch.Generator()
-generator.manual_seed(
-    int(torch.empty((), dtype=torch.int64).random_().item())
-)
-sampler = LengthGroupedSampler(
-                dataset=train_dataset,
-                batch_size=geneformer_batch_size,
-                lengths=example_lengths,
-                generator=generator,
-            )
+dataset_list = train_dataset.to_pandas().to_dict('records')
 
 # Save the samples as shards using MDSWriter
 with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-    for i in range( int(len(train_dataset)/geneformer_batch_size) ):
-        out.write( next(iter(sampler)) )
+    for x in dataset_list:
+        out.write(x)
 
 print("Conversion to streaming dataset conpleted")
 
@@ -206,6 +188,25 @@ linear_lr_decay = LinearLR(
     optimizer, start_factor=1.0,
     end_factor=0, total_iters=150
 )
+
+#Get a sampler
+generator = torch.Generator()
+generator.manual_seed(
+    int(torch.empty((), dtype=torch.int64).random_().item())
+)
+sampler = LengthGroupedSampler(
+                dataset=train_dataset,
+                batch_size=geneformer_batch_size,
+                lengths=example_lengths,
+                generator=generator,
+            )
+
+#data collator
+data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer, 
+        mlm=True, 
+        mlm_probability=mlm_probability
+    )
 
 train_dataloader = DataLoader(streaming_dataset,
                         shuffle=False, 
