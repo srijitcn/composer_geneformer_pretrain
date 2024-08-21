@@ -98,9 +98,7 @@ streaming_dataset_cache_location = f"{datadir}/streaming/cache"
 example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
 
 # output directories
-current_date = datetime.datetime.now(tz=timezone)
-datestamp = f"{str(current_date.year)[-2:]}{current_date.month:02d}{current_date.day:02d}_{current_date.strftime('%X').replace(':','')}"
-run_name = f"{datestamp}_geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}_LR{max_lr}_LS{lr_schedule_fn}_WU{warmup_steps}_O{optimizer}_DS{num_gpus}"
+run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
 training_output_dir = f"{rootdir}/models/{run_name}/"
 logging_dir = f"{rootdir}/runs/{run_name}/"
 model_output_dir = os.path.join(training_output_dir, "models/")
@@ -188,7 +186,7 @@ trainer = Trainer(
     schedulers=[linear_lr_decay],
     device="gpu" ,
     train_subset_num_batches=150,
-    save_folder="checkpoints",
+    save_folder=model_output_dir,
     save_interval="1ep",
     save_overwrite=True,
     run_name=run_name,
@@ -203,5 +201,6 @@ trainer.fit()
 
 print(trainer.state.train_metrics)
 
+print(f"Trained model available at : {model_output_dir}")
 
 print("*************Done")
