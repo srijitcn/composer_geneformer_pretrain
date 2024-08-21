@@ -33,6 +33,8 @@ command: |
   wget https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048.dataset/state.json -P genecorpus_30M_2048.dataset
   wget https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/raw/main/genecorpus_30M_2048_lengths.pkl -o genecorpus_30M_2048_lengths.pkl
 
+  ls -al genecorpus_30M_2048.dataset/
+
   cd ../..
   pip install -r requirements.txt
   
