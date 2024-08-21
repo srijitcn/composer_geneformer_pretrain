@@ -186,7 +186,7 @@ trainer = Trainer(
     save_overwrite=True,
     seed=17,
     deepspeed_config={
-        "train_batch_size": geneformer_batch_size,
+        "train_batch_size": 8,
         "fp16": {"enabled": True},
     }
 )
