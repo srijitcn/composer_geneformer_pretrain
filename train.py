@@ -140,7 +140,7 @@ print(model)
 
 
 #Create streaming dataset
-streaming_dataset = StreamingDataset(local=streaming_dataset_location)
+streaming_dataset = StreamingDataset(local=streaming_dataset_location,batch_size=geneformer_batch_size)
 
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
