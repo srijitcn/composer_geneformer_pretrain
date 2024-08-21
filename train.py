@@ -101,7 +101,7 @@ example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
 
 ##Create streaming dataset
 columns = {
-    'input_ids': "uint8",
+    'input_ids': "ndarray",
     'lengths': 'int'
 }
 
