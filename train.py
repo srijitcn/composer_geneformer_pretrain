@@ -13,14 +13,20 @@ import subprocess
 
 import numpy as np
 import pytz
+
 import torch
+from torch.utils.data import DataLoader
+
 from datasets import load_from_disk
+from datasets.dataset_dict import DatasetDict
+
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
 
 import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
 
+from composer.models.huggingface import HuggingFaceModel
 
 #### Env variables
 os.environ["NCCL_DEBUG"] = "INFO"
@@ -134,11 +140,58 @@ print(dataset[0])
 with open(example_lengths_file, "rb") as f:
     example_lengths = pickle.load(f)
 
-data_collator = DataCollatorForLanguageModeling(
-                tokenizer=tokenizer, 
-                mlm=True, 
-                mlm_probability=mlm_probability
-            )
+# Split dataset into train and validation sets
+train_test_split = dataset.train_test_split(test=0.1)
+dataset_dict = DatasetDict({
+    "train": train_test_split["train"],
+    "test": train_test_split["test"]})
 
+data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer, 
+        mlm=True, 
+        mlm_probability=mlm_probability
+    )
+
+train_dataloader = DataLoader(train_test_split["train"], batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
+eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
+
+
+#Prepare composer model
+composer_model = HuggingFaceModel(model, tokenizer=tokenizer)
+
+
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import LinearLR
+import torch
+from composer import Trainer
+
+optimizer = AdamW(
+    params=composer_model.parameters(),
+    lr=3e-5, betas=(0.9, 0.98),
+    eps=1e-6, weight_decay=3e-6
+)
+linear_lr_decay = LinearLR(
+    optimizer, start_factor=1.0,
+    end_factor=0, total_iters=150
+)
+
+
+# Create Trainer Object
+trainer = Trainer(
+    model=composer_model, # This is the model from the HuggingFaceModel wrapper class.
+    train_dataloader=train_dataloader,
+    eval_dataloader=None,
+    max_duration="2ep",
+    optimizers=optimizer,
+    schedulers=[linear_lr_decay],
+    device='gpu' ,
+    train_subset_num_batches=150,
+    save_folder="checkpoints",
+    save_interval="1ep",
+    save_overwrite=True,
+    seed=17
+)
+# Start training
+trainer.fit()
 
 print("*************Done")
