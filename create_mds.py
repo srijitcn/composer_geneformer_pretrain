@@ -57,6 +57,7 @@ with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zst
     sample_iter = iter(sampler)
     for i in range( int( len(train_dataset)/geneformer_batch_size ) + 1 ):
         sample = next(sample_iter)
+        print(sample)
         for x in sample:
             out.write({
                 "input_ids" : x["input_ids"],
