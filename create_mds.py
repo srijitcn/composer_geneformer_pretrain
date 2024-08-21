@@ -3,6 +3,7 @@ from streaming import MDSWriter, StreamingDataset
 from transformers.trainer_pt_utils import LengthGroupedSampler
 import pickle
 import torch
+from torch.utils.data import DataLoader
 
 datadir = "/Geneformer/data"
 dataset_file = f"{datadir}/dataset/genecorpus_30M_2048.dataset"
@@ -23,7 +24,7 @@ print(dataset)
 ###*******************************************************************************************************************
 # Split dataset into train and validation sets
 train_test_split = dataset.train_test_split(test_size=0.1)
-train_dataset = train_test_split["train"] #.select(range(1000))
+train_dataset = train_test_split["train"].select(range(1000))
 test_dataset = train_test_split["test"]
 
 with open(example_lengths_file, "rb") as f:
@@ -42,20 +43,26 @@ sampler = LengthGroupedSampler(
                 generator=generator,
             )
 
+train_dataloader = DataLoader(train_dataset,
+                        shuffle=False, 
+                        drop_last=False, 
+                        sampler=sampler)
 
 dataset_list = train_dataset.to_pandas().to_dict('records')
 
 # Save the samples as shards using MDSWriter
-with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-    for x in dataset_list:
-        out.write({
-            "input_ids" : x["input_ids"],
-            "length" : x["length"]
-        })
-
 #with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-#    sample_iter = iter(sampler)
-#    for i in range( int( len(train_dataset)/geneformer_batch_size ) + 1 ):
+##    for x in dataset_list:
+#        out.write({
+#            "input_ids" : x["input_ids"],
+#            "length" : x["length"]
+#        })
+
+with MDSWriter(out=f"{streaming_dataset_location}_batched", columns=columns, compression='zstd') as out:
+    batch_iter = iter(train_dataloader)
+    for i in range( int( len(train_dataset)/geneformer_batch_size ) + 1 ):
+        batch = next(batch_iter)
+        print(batch)
 #        sample = next(sample_iter)
 #        print(sample)
 #        for x in sample:
