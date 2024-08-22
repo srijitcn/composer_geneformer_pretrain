@@ -23,14 +23,21 @@ train_test_split = dataset.train_test_split(test_size=0.1)
 train_dataset = train_test_split["train"]
 test_dataset = train_test_split["test"]
 
-dataset_list = train_dataset.to_pandas().to_dict('records')
+train_dataset_list = train_dataset.to_pandas().to_dict('records')
+test_dataset_list = test_dataset.to_pandas().to_dict('records')
 
 # Save the samples as shards using MDSWriter
-with MDSWriter(out=streaming_dataset_location, columns=columns, compression='zstd') as out:
-    for x in dataset_list:
+with MDSWriter(out=f"{streaming_dataset_location}/train", columns=columns, compression='zstd') as out:
+    for x in train_dataset_list:
         out.write({
             "input_ids" : x["input_ids"],
             "length" : x["length"]
         })
 
+with MDSWriter(out=f"{streaming_dataset_location}/test", columns=columns, compression='zstd') as out:
+    for x in test_dataset_list:
+        out.write({
+            "input_ids" : x["input_ids"],
+            "length" : x["length"]
+        })
 
