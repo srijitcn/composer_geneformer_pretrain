@@ -1,0 +1,1 @@
+checkpoint_path = "/composer_output/output/runs/geneformer_30M_L6_emb256_SL2048_E3_B12/"
