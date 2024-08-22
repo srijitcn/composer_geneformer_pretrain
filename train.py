@@ -33,7 +33,7 @@ from streaming import MDSWriter, StreamingDataset
 
 
 #### Env variables
-os.environ["NCCL_DEBUG"] = "WARN"
+os.environ["NCCL_DEBUG"] = "INFO"
 os.environ["OMPI_MCA_opal_cuda_support"] = "true"
 os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
@@ -199,8 +199,7 @@ trainer = Trainer(
     deepspeed_config={
         "train_batch_size": 8,
         "fp16": {"enabled": True},
-    },
-    console_log_interval="5ep"
+    }
 )
 # Start training
 trainer.fit()
