@@ -202,8 +202,8 @@ trainer = Trainer(
     #}
     fsdp_config = {
         "sharding_strategy": "FULL_SHARD",
-        "state_dict_type": "sharded",
-        "sharded_ckpt_prefix_dir": "ba{batch}-shards",
+        "state_dict_type": "full",
+        #"sharded_ckpt_prefix_dir": "ba{batch}-shards",
         "cpu_offload": False, # Not supported yet
         "mixed_precision": "DEFAULT",
         "backward_prefetch": "BACKWARD_POST",
