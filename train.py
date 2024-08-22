@@ -98,7 +98,7 @@ example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
 # output directories
 run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
 training_output_dir = f"{rootdir}/models/{run_name}/"
-logging_dir = f"{rootdir}/runs/{run_name}/"
+logging_dir = f"{rootdir}/runs/{run_name}"
 model_output_dir = os.path.join(training_output_dir, "models/")
 
 # ensure not overwriting previously saved model
