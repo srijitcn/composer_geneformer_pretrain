@@ -19,8 +19,6 @@ from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LinearLR
 
-from datasets import load_from_disk
-
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
 import geneformer
@@ -146,7 +144,7 @@ print(model)
 
 
 #Create streaming dataset
-streaming_dataset = StreamingDataset(local=streaming_dataset_location,batch_size=geneformer_batch_size)
+streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train",batch_size=geneformer_batch_size)
 
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
@@ -170,15 +168,14 @@ data_collator = DataCollatorForLanguageModeling(
         mlm_probability=mlm_probability
     )
 
-train_dataloader = DataLoader(streaming_dataset,
+train_dataloader = DataLoader(streaming_dataset_train,
                         shuffle=False, 
                         drop_last=False, 
-                        #sampler=sampler,
                         collate_fn=data_collator)
 
 # Create Trainer Object
 trainer = Trainer(
-    model=composer_model, # This is the model from the HuggingFaceModel wrapper class.
+    model=composer_model, 
     train_dataloader=train_dataloader,
     eval_dataloader=None,
     max_duration="2ep",
@@ -199,7 +196,7 @@ trainer = Trainer(
 # Start training
 trainer.fit()
 
-print(trainer.state.train_metrics)
+print(trainer.state.train_metrics) #<- need to fgure our why its not printing anything
 
 #trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
 
