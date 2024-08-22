@@ -178,6 +178,7 @@ eval_dataloader = DataLoader(streaming_dataset_eval,
                         drop_last=False, 
                         collate_fn=data_collator)
 
+state_dict_type = "sharded"
 
 # Create Trainer Object
 trainer = Trainer(
@@ -191,7 +192,7 @@ trainer = Trainer(
     schedulers=[linear_lr_decay],
     device="gpu" ,
     train_subset_num_batches=150,
-    save_folder=f"{logging_dir}_sharded",
+    save_folder=f"{logging_dir}_{state_dict_type}",
     save_interval="5ep",
     save_overwrite=True,
     run_name=run_name,
@@ -202,7 +203,7 @@ trainer = Trainer(
     #}
     fsdp_config = {
         "sharding_strategy": "FULL_SHARD",
-        "state_dict_type": "full",
+        "state_dict_type": state_dict_type,
         #"sharded_ckpt_prefix_dir": "ba{batch}-shards",
         "cpu_offload": False, # Not supported yet
         "mixed_precision": "DEFAULT",
