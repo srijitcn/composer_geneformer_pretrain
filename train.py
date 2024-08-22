@@ -145,7 +145,7 @@ print(model)
 
 #Create streaming dataset
 streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train",batch_size=geneformer_batch_size)
-
+streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test",batch_size=geneformer_batch_size)
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
 #Prepare composer model
@@ -173,11 +173,17 @@ train_dataloader = DataLoader(streaming_dataset_train,
                         drop_last=False, 
                         collate_fn=data_collator)
 
+eval_dataloader = DataLoader(streaming_dataset_eval,
+                        shuffle=False, 
+                        drop_last=False, 
+                        collate_fn=data_collator)
+
+
 # Create Trainer Object
 trainer = Trainer(
     model=composer_model, 
-    train_dataloader=train_dataloader,
-    eval_dataloader=None,
+    train_dataloader=train_dataloader,    
+    eval_dataloader=eval_dataloader,
     max_duration="2ep",
     optimizers=optimizer,
     schedulers=[linear_lr_decay],
@@ -201,5 +207,7 @@ print(trainer.state.train_metrics) #<- need to fgure our why its not printing an
 #trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
 
 print(f"Trained model available at : {model_output_dir}")
+
+#load the model back and run some test
 
 print("*************Done")
