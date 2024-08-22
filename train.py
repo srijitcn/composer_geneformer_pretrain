@@ -178,7 +178,7 @@ eval_dataloader = DataLoader(streaming_dataset_eval,
                         drop_last=False, 
                         collate_fn=data_collator)
 
-state_dict_type = "sharded"
+state_dict_type = "full"
 
 # Create Trainer Object
 trainer = Trainer(
