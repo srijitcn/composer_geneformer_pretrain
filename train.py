@@ -185,7 +185,7 @@ trainer = Trainer(
     train_dataloader=train_dataloader,    
     eval_dataloader=eval_dataloader,
     eval_interval="5ep",
-    eval_subset_num_batches=100,
+    eval_subset_num_batches=1000,
     max_duration="10ep",
     optimizers=optimizer,
     schedulers=[linear_lr_decay],
@@ -199,12 +199,14 @@ trainer = Trainer(
     deepspeed_config={
         "train_batch_size": 8,
         "fp16": {"enabled": True},
-    }
+    },
+    console_log_interval="5ep"
 )
 # Start training
 trainer.fit()
 
-print(trainer.state.train_metrics) #<- need to fgure our why its not printing anything
+print(trainer.state.train_metrics)
+print(trainer.state.eval_metrics)
 
 #trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
 
