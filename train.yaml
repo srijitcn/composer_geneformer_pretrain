@@ -9,7 +9,8 @@ integrations:
 
 command: |
   cd composer_geneformer_pretrain
-  sh ./commands.sh 
+  geneformer_prep.sh 
+  pip install -r requirements.txt
   composer -n 8 train.py
 
 compute:
