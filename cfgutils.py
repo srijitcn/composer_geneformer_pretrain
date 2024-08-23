@@ -46,6 +46,8 @@ def update_batch_size_info(cfg: DictConfig):
             cfg.device_eval_batch_size = cfg.device_train_microbatch_size
     return cfg
 
+def build_model_config(cfg:DictConfig):
+    return om.to_container(cfg)
 
 def log_config(cfg: DictConfig):
     print(om.to_yaml(cfg))

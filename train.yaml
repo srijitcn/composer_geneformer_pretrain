@@ -17,6 +17,29 @@ compute:
   cluster: r8z11
 
 parameters:
+  model_config:
+    hidden_size: 256
+    num_hidden_layers: 6
+    initializer_range: 0.02
+    layer_norm_eps: 1e-12
+    attention_probs_dropout_prob: 0.02
+    hidden_dropout_prob: 0.02
+    intermediate_size: 512
+    hidden_act: relu
+    max_position_embeddings: 2048
+    model_type: bert
+    num_attention_heads: 4
+  
+  fsdp_config:
+    sharding_strategy: FULL_SHARD,
+    state_dict_type: full,
+    cpu_offload: False, # Not supported yet
+    mixed_precision: DEFAULT,
+    backward_prefetch: BACKWARD_POST,
+    activation_checkpointing: False,
+    activation_cpu_offload: False,
+    verbose: True
+    
   # Optimization
   scheduler:
     name: linear_decay_with_warmup
@@ -32,21 +55,6 @@ parameters:
     eps: 1.0e-06
     weight_decay: 1.0e-5 # Amount of weight decay regularization
 
-  max_duration: 286720000sp # Subsample the training data for ~275M samples
-  eval_interval: 2000ba
-  global_train_batch_size: 4096
-
-  # System
-  seed: 17
-  device_eval_batch_size: 128
-  device_train_microbatch_size: auto
-  precision: amp_bf16
-
-  # Logging
-  progress_bar: false
-  log_to_console: true
-  console_log_interval: 1ba
-
   callbacks:
     speed_monitor:
       window_size: 500
@@ -58,6 +66,25 @@ parameters:
       tracking_uri: databricks
       experiment_name: mlflow_experiments/geneformer_pretraining
 
+  seed_val : 42
+  working_dir : /pretrain/temp
+  # Streaming Dataset
+  data_bucket_name : srijit-nair-test-bucket
+  data_bucket_key : geneformer/data
+  token_dictionary_filename : token_dictionary.pkl
+  example_lengths_filename : dataset/genecorpus_30M_2048_lengths.pkl
+  mlm_probability: 0.15
+  # Batching
+  train_batch_size: 12
+  eval_batch_size: 12
+  device_train_microbatch_size: auto
+  precision: fp16
+  # Logging
+  progress_bar: false
+  log_to_console: true
+  console_log_interval: 1ba
+  eval_interval: 2000ba
+  global_train_batch_size: 4096
   #Checkpoint to remote object store
   save_interval: 5ep
   save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK

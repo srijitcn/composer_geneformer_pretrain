@@ -30,8 +30,11 @@ from composer.models.huggingface import HuggingFaceModel
 from composer.utils import reproducibility
 from composer import Trainer
 
-
 from streaming import MDSWriter, StreamingDataset
+
+from omegaconf import DictConfig
+
+from cfgutils import *
 
 
 #### Env variables
@@ -39,185 +42,121 @@ from streaming import MDSWriter, StreamingDataset
 #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
 #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
-seed_num = 0
-random.seed(seed_num)
-np.random.seed(seed_num)
-seed_val = 42
+def main(cfg: DictConfig):
 
-# set local time/directories
-timezone = pytz.timezone("US/Eastern")
-tempoutdir = "/composer_output"
-data_bucket_name = "srijit-nair-test-bucket"
-data_bicket_key = "geneformer/data"
-data_dir = f"s3://{data_bucket_name}/{data_bicket_key}"
+    seed_val = cfg.seed_val
+    random.seed(seed_val)
+    np.random.seed(seed_val)
 
-
-# set model parameters
-# model type
-model_type = "bert"
-# max input size
-max_input_size = 2**11  # 2048
-# number of layers
-num_layers = 6
-# number of attention heads
-num_attn_heads = 4
-# number of embedding dimensions
-num_embed_dim = 256
-# intermediate size
-intermed_size = num_embed_dim * 2
-# activation function
-activ_fn = "relu"
-# initializer range, layer norm, dropout
-initializer_range = 0.02
-layer_norm_eps = 1e-12
-attention_probs_dropout_prob = 0.02
-hidden_dropout_prob = 0.02
-
-# set training parameters
-# total number of examples in Genecorpus-30M after QC filtering:
-num_examples = 27_406_208
-# number gpus
-num_gpus = 12
-# batch size for training and eval
-geneformer_batch_size = 12
-# max learning rate
-max_lr = 1e-3
-# learning schedule
-lr_schedule_fn = "linear"
-# warmup steps
-warmup_steps = 10_000
-# number of epochs
-epochs = 3
-# optimizer
-optimizer = "adamw"
-# weight_decay
-weight_decay = 0.001
-
-mlm_probability = 0.15
-
-streaming_dataset_location = f"{data_dir}/streaming/genecorpus_30M_2048.dataset"
-streaming_dataset_cache_location = f"{tempoutdir}/streaming/cache"
-example_lengths_file = f"{data_dir}/dataset/genecorpus_30M_2048_lengths.pkl"
-
-# output directories
-run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
-training_output_dir = f"{tempoutdir}/models/{run_name}/"
-logging_dir = f"{tempoutdir}/runs/{run_name}"
-model_output_dir = os.path.join(training_output_dir, "models/")
-
-s3 = boto3.resource('s3')
-token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bicket_key}/token_dictionary.pkl").get()['Body'].read())
-
-##2  Get model and tokenizer
-config = {
-    "hidden_size": num_embed_dim,
-    "num_hidden_layers": num_layers,
-    "initializer_range": initializer_range,
-    "layer_norm_eps": layer_norm_eps,
-    "attention_probs_dropout_prob": attention_probs_dropout_prob,
-    "hidden_dropout_prob": hidden_dropout_prob,
-    "intermediate_size": intermed_size,
-    "hidden_act": activ_fn,
-    "max_position_embeddings": max_input_size,
-    "model_type": model_type,
-    "num_attention_heads": num_attn_heads,
-    "pad_token_id": token_dictionary.get("<pad>"),
-    "vocab_size": len(token_dictionary),  # genes+2 for <mask> and <pad> tokens
-}
-
-### Load model
-
-reproducibility.configure_deterministic_mode()
-reproducibility.seed_all(seed_val)
+    working_dir = cfg.working_dir
+    data_bucket_name = "srijit-nair-test-bucket"
+    data_bucket_key = "geneformer/data"
+    data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
+    token_dictionary_filename = cfg.token_dictionary_filename
+    example_lengths_filename = cfg.example_lengths_filename
 
 
-config = BertConfig(**config)
-model = BertForMaskedLM(config)
-tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-model.train()
-print(model)
+    # batch size for training and eval
+    train_batch_size = cfg.train_batch_size
+    eval_batch_size = cfg.eval_batch_size
+    mlm_probability = cfg.mlm_probability
 
+    streaming_dataset_location = f"{data_dir}/streaming/genecorpus_30M_2048.dataset"
+    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
+    example_lengths_file = f"{data_dir}/{example_lengths_filename}"
 
-#Create streaming dataset
-streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=geneformer_batch_size)
-streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=geneformer_batch_size)
-#eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
+    # output directories
+    run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
+    training_output_dir = f"{tempoutdir}/models/{run_name}/"
+    logging_dir = f"{tempoutdir}/runs/{run_name}"
+    model_output_dir = os.path.join(training_output_dir, "models/")
 
-#Prepare composer model
-composer_model = HuggingFaceModel(model)
+    state_dict_type = cfg.state_dict_type
 
-optimizer = AdamW(
-    params=composer_model.parameters(),
-    lr=3e-5, betas=(0.9, 0.98),
-    eps=1e-6, weight_decay=3e-6
-)
-linear_lr_decay = LinearLR(
-    optimizer, start_factor=1.0,
-    end_factor=0, total_iters=150
-)
+    #############################################
+    ### Start processing
+    reproducibility.configure_deterministic_mode()
+    reproducibility.seed_all(seed_val)
 
-#data collator
-data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, 
-        mlm=True, 
-        mlm_probability=mlm_probability
+    # Read the token dictionary file
+    s3 = boto3.resource('s3')
+    token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
+
+    ### Load model
+    model_config = build_model_config()
+    model_config["pad_token_id"] = token_dictionary.get("<pad>")
+    model_config["vocab_size"] = len(token_dictionary)
+
+    config = BertConfig(**model_config)
+    model = BertForMaskedLM(config)
+    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
+    model.train()
+    print(model)
+
+    #Create streaming dataset
+    streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
+    streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+
+    #Prepare composer model
+    composer_model = HuggingFaceModel(model)
+
+    # Build optimizer
+    optimizer = build_optimizer(cfg.optimizer, model)
+
+    # Scheduler
+    scheduler = build_scheduler(cfg.scheduler)
+
+    #data collator
+    data_collator = DataCollatorForLanguageModeling(
+            tokenizer=tokenizer, 
+            mlm=True, 
+            mlm_probability=mlm_probability
+        )
+
+    train_dataloader = DataLoader(streaming_dataset_train,
+                            shuffle=False, 
+                            drop_last=False, 
+                            collate_fn=data_collator)
+
+    eval_dataloader = DataLoader(streaming_dataset_eval,
+                            shuffle=False, 
+                            drop_last=False, 
+                            collate_fn=data_collator)
+
+    # Create Trainer Object
+    trainer = Trainer(
+        run_name=cfg.run_name,
+        model=composer_model, 
+        train_dataloader=train_dataloader,    
+        eval_dataloader=eval_dataloader,
+        max_duration=cfg.max_duration,
+        eval_interval=cfg.eval_interval,
+        optimizers=optimizer,
+        schedulers=[scheduler],
+        device=cfg.get("device", "gpu"),
+        device_train_microbatch_size=cfg.get("device_train_microbatch_size","auto"),
+        save_folder=cfg.get("save_folder", None),
+        save_interval=cfg.get("save_interval", "5ep"),
+        save_num_checkpoints_to_keep=cfg.get("save_num_checkpoints_to_keep",1),
+        train_subset_num_batches=cfg.get("train_subset_num_batches", -1),
+        eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
+        save_overwrite=cfg.get("save_overwrite", False),
+        load_path=cfg.get("load_path", None),
+        load_weights_only=cfg.get("load_weights_only", False),
+        python_log_level=cfg.get("python_log_level", None),
+        seed=seed_val,        
+        fsdp_config = cfg.get("fsdp_config", None)
     )
+    # Start training
+    #trainer.fit()
 
-train_dataloader = DataLoader(streaming_dataset_train,
-                        shuffle=False, 
-                        drop_last=False, 
-                        collate_fn=data_collator)
+    #print(trainer.state.train_metrics)
+    #print(trainer.state.eval_metrics)
 
-eval_dataloader = DataLoader(streaming_dataset_eval,
-                        shuffle=False, 
-                        drop_last=False, 
-                        collate_fn=data_collator)
+    #trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
 
-state_dict_type = "full"
+    print(f"Trained model available at : {model_output_dir}")
 
-# Create Trainer Object
-trainer = Trainer(
-    model=composer_model, 
-    train_dataloader=train_dataloader,    
-    eval_dataloader=eval_dataloader,
-    eval_interval="5ep",
-    eval_subset_num_batches=1000,
-    max_duration="10ep",
-    optimizers=optimizer,
-    schedulers=[linear_lr_decay],
-    device="gpu" ,
-    train_subset_num_batches=150,
-    save_folder=f"{logging_dir}_{state_dict_type}",
-    save_interval="5ep",
-    save_overwrite=True,
-    run_name=run_name,
-    seed=seed_val,
-    #deepspeed_config={
-    #    "train_batch_size": 8,
-    #    "fp16": {"enabled": True},
-    #}
-    fsdp_config = {
-        "sharding_strategy": "FULL_SHARD",
-        "state_dict_type": state_dict_type,
-        #"sharded_ckpt_prefix_dir": "ba{batch}-shards",
-        "cpu_offload": False, # Not supported yet
-        "mixed_precision": "DEFAULT",
-        "backward_prefetch": "BACKWARD_POST",
-        "activation_checkpointing": False,
-        "activation_cpu_offload": False,
-        "verbose": True
-    }
-)
-# Start training
-trainer.fit()
+    #load the model back and run some test
 
-print(trainer.state.train_metrics)
-print(trainer.state.eval_metrics)
-
-#trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
-
-print(f"Trained model available at : {model_output_dir}")
-
-#load the model back and run some test
-
-print("*************Done")
+    print("*************Done")
