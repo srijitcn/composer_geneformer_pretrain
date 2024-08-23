@@ -34,8 +34,8 @@ from streaming import MDSWriter, StreamingDataset
 
 #### Env variables
 #os.environ["NCCL_DEBUG"] = "INFO"
-os.environ["OMPI_MCA_opal_cuda_support"] = "true"
-os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
+#os.environ["OMPI_MCA_opal_cuda_support"] = "true"
+#os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
 seed_num = 0
 random.seed(seed_num)
@@ -44,8 +44,9 @@ seed_val = 42
 
 # set local time/directories
 timezone = pytz.timezone("US/Eastern")
-rootdir = "/composer_output/output"
-datadir = "/Geneformer/data"
+tempoutdir = "/composer_output"
+datadir = "s3://srijit-nair-test-bucket/geneformer/data"
+
 
 # set model parameters
 # model type
@@ -90,25 +91,15 @@ weight_decay = 0.001
 
 mlm_probability = 0.15
 
-dataset_file = f"{datadir}/dataset/genecorpus_30M_2048.dataset"
 streaming_dataset_location = f"{datadir}/streaming/genecorpus_30M_2048.dataset"
-streaming_dataset_cache_location = f"{datadir}/streaming/cache"
+streaming_dataset_cache_location = f"{tempoutdir}/streaming/cache"
 example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
 
 # output directories
 run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
-training_output_dir = f"{rootdir}/models/{run_name}/"
-logging_dir = f"{rootdir}/runs/{run_name}"
+training_output_dir = f"{tempoutdir}/models/{run_name}/"
+logging_dir = f"{tempoutdir}/runs/{run_name}"
 model_output_dir = os.path.join(training_output_dir, "models/")
-
-# ensure not overwriting previously saved model
-model_output_file = os.path.join(model_output_dir, "pytorch_model.bin")
-if os.path.isfile(model_output_file) is True:
-    raise Exception("Model already saved to this directory.")
-
-# make training and model output directories
-subprocess.call(f"mkdir -p {training_output_dir}", shell=True)
-subprocess.call(f"mkdir -p {model_output_dir}", shell=True)
 
 with open(f"{datadir}/token_dictionary.pkl", "rb") as fp:
     token_dictionary = pickle.load(fp)
@@ -144,8 +135,8 @@ print(model)
 
 
 #Create streaming dataset
-streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train",batch_size=geneformer_batch_size)
-streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test",batch_size=geneformer_batch_size)
+streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=geneformer_batch_size)
+streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=geneformer_batch_size)
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 
 #Prepare composer model

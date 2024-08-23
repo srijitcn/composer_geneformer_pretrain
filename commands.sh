@@ -25,8 +25,9 @@ curl https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/resolve/main/gene
 
 ls -al genecorpus_30M_2048.dataset/
 
-mkdir /composer_output
+mkdir -p /composer_output
 
 cd /composer_geneformer_pretrain
 pip install -r requirements.txt
 
+ß

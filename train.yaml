@@ -15,3 +15,50 @@ command: |
 compute:
   gpus: 8
   cluster: r8z11
+
+parameters:
+  # Optimization
+  scheduler:
+    name: linear_decay_with_warmup
+    t_warmup: 0.06dur # Warmup to the full LR for 6% of the training duration
+    alpha_f: 0.02 # Linearly decay to 0.02x the full LR by the end of the training duration
+
+  optimizer:
+    name: decoupled_adamw
+    lr: 5.0e-4 # Peak learning rate
+    betas:
+    - 0.9
+    - 0.98
+    eps: 1.0e-06
+    weight_decay: 1.0e-5 # Amount of weight decay regularization
+
+  max_duration: 286720000sp # Subsample the training data for ~275M samples
+  eval_interval: 2000ba
+  global_train_batch_size: 4096
+
+  # System
+  seed: 17
+  device_eval_batch_size: 128
+  device_train_microbatch_size: auto
+  precision: amp_bf16
+
+  # Logging
+  progress_bar: false
+  log_to_console: true
+  console_log_interval: 1ba
+
+  callbacks:
+    speed_monitor:
+      window_size: 500
+    lr_monitor: {}
+
+  #make sure you have configured databricks secret
+  loggers:
+    mlflow:
+      tracking_uri: databricks
+      experiment_name: mlflow_experiments/geneformer_pretraining
+
+  #Checkpoint to remote object store
+  save_interval: 5ep
+  save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
+  save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
