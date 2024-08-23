@@ -14,6 +14,8 @@ import subprocess
 import numpy as np
 import pytz
 
+import boto3
+
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
@@ -101,8 +103,8 @@ training_output_dir = f"{tempoutdir}/models/{run_name}/"
 logging_dir = f"{tempoutdir}/runs/{run_name}"
 model_output_dir = os.path.join(training_output_dir, "models/")
 
-with open(f"{datadir}/token_dictionary.pkl", "rb") as fp:
-    token_dictionary = pickle.load(fp)
+s3 = boto3.resource('s3')
+token_dictionary = pickle.loads(s3.Bucket("bucket_name").Object("key_to_pickle.pickle").get()['Body'].read())
 
 ##2  Get model and tokenizer
 config = {
