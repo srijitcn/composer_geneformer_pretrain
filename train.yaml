@@ -9,9 +9,9 @@ integrations:
 
 command: |
   cd composer_geneformer_pretrain
-  sh ./geneformer_prep.sh 
+  #sh ./geneformer_prep.sh 
   pip install -r requirements.txt
-  composer -n 8 train.py
+  composer -n 8 train.py /mnt/config/parameters.yaml
 
 compute:
   gpus: 8
