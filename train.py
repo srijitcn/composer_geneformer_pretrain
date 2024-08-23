@@ -160,3 +160,13 @@ def main(cfg: DictConfig):
     #load the model back and run some test
 
     print("*************Done")
+
+
+if __name__ == '__main__':
+    yaml_path, args_list = sys.argv[1], sys.argv[2:]
+    with open(yaml_path) as f:
+        yaml_cfg = om.load(f)
+    cli_cfg = om.from_cli(args_list)
+    cfg = om.merge(yaml_cfg, cli_cfg)
+    cfg = cast(DictConfig, cfg)  # for type checking
+    main(cfg)

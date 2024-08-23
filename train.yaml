@@ -9,7 +9,7 @@ integrations:
 
 command: |
   cd composer_geneformer_pretrain
-  sh ./commands.sh
+  sh ./commands.sh 
   composer -n 8 train.py
 
 compute:
@@ -39,7 +39,7 @@ parameters:
     activation_checkpointing: False,
     activation_cpu_offload: False,
     verbose: True
-    
+
   # Optimization
   scheduler:
     name: linear_decay_with_warmup

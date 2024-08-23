@@ -5,7 +5,6 @@ datadir = "/Geneformer/data"
 dataset_file = f"{datadir}/dataset/genecorpus_30M_2048.dataset"
 streaming_dataset_location = f"{datadir}/streaming/genecorpus_30M_2048.dataset"
 example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
-geneformer_batch_size = 12
 
 columns = {
     'input_ids': "ndarray",
@@ -15,7 +14,6 @@ columns = {
 ##3 Prepare dataset
 dataset = load_from_disk(dataset_file)
 print(dataset)
-
 
 ###*******************************************************************************************************************
 # Split dataset into train and validation sets
