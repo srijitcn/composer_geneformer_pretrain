@@ -68,12 +68,12 @@ parameters:
       experiment_name: mlflow_experiments/geneformer_pretraining
 
   seed_val : 42
+  run_name : geneformer_pretrain
   working_dir : /pretrain/temp
   # Streaming Dataset
   data_bucket_name : srijit-nair-test-bucket
   data_bucket_key : geneformer/data
   token_dictionary_filename : token_dictionary.pkl
-  example_lengths_filename : dataset/genecorpus_30M_2048_lengths.pkl
   mlm_probability: 0.15
   # Batching
   train_batch_size: 12

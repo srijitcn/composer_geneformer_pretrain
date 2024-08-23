@@ -53,8 +53,6 @@ def main(cfg: DictConfig):
     data_bucket_key = "geneformer/data"
     data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
     token_dictionary_filename = cfg.token_dictionary_filename
-    example_lengths_filename = cfg.example_lengths_filename
-
 
     # batch size for training and eval
     train_batch_size = cfg.train_batch_size
@@ -63,15 +61,8 @@ def main(cfg: DictConfig):
 
     streaming_dataset_location = f"{data_dir}/streaming/genecorpus_30M_2048.dataset"
     streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
-    example_lengths_file = f"{data_dir}/{example_lengths_filename}"
 
     # output directories
-    run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
-    training_output_dir = f"{tempoutdir}/models/{run_name}/"
-    logging_dir = f"{tempoutdir}/runs/{run_name}"
-    model_output_dir = os.path.join(training_output_dir, "models/")
-
-    state_dict_type = cfg.state_dict_type
 
     #############################################
     ### Start processing
@@ -152,10 +143,6 @@ def main(cfg: DictConfig):
 
     #print(trainer.state.train_metrics)
     #print(trainer.state.eval_metrics)
-
-    #trainer.export_for_inference(save_format='torchscript', save_path=model_output_dir)
-
-    print(f"Trained model available at : {model_output_dir}")
 
     #load the model back and run some test
 
