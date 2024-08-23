@@ -47,7 +47,9 @@ seed_val = 42
 # set local time/directories
 timezone = pytz.timezone("US/Eastern")
 tempoutdir = "/composer_output"
-datadir = "s3://srijit-nair-test-bucket/geneformer/data"
+data_bucket_name = "srijit-nair-test-bucket"
+data_bicket_key = "geneformer/data"
+data_dir = f"s3://{data_bucket_name}/{data_bicket_key}"
 
 
 # set model parameters
@@ -93,9 +95,9 @@ weight_decay = 0.001
 
 mlm_probability = 0.15
 
-streaming_dataset_location = f"{datadir}/streaming/genecorpus_30M_2048.dataset"
+streaming_dataset_location = f"{data_dir}/streaming/genecorpus_30M_2048.dataset"
 streaming_dataset_cache_location = f"{tempoutdir}/streaming/cache"
-example_lengths_file = f"{datadir}/dataset/genecorpus_30M_2048_lengths.pkl"
+example_lengths_file = f"{data_dir}/dataset/genecorpus_30M_2048_lengths.pkl"
 
 # output directories
 run_name = f"geneformer_30M_L{num_layers}_emb{num_embed_dim}_SL{max_input_size}_E{epochs}_B{geneformer_batch_size}"
@@ -104,7 +106,7 @@ logging_dir = f"{tempoutdir}/runs/{run_name}"
 model_output_dir = os.path.join(training_output_dir, "models/")
 
 s3 = boto3.resource('s3')
-token_dictionary = pickle.loads(s3.Bucket("bucket_name").Object("key_to_pickle.pickle").get()['Body'].read())
+token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bicket_key}/token_dictionary.pkl").get()['Body'].read())
 
 ##2  Get model and tokenizer
 config = {
