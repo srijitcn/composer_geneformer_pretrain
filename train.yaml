@@ -15,18 +15,21 @@ command: |
   unzip awscliv2.zip
   sudo ./aws/install
 
+  echo ">>> Installing Geneformer"
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
 
+  echo ">>> Installing dependencies"
   pip install -q -r requirements.txt
 
   mkdir /Geneformer/data -p 
-  echo "Copying data from s3.. might take few mins"
+  echo ">>> Copying data from s3.. might take few mins"
   aws s3 cp --quiet --recursive s3://srijit-nair-sandbox-bucket/geneformer/data /Geneformer/data
   echo "done"
   echo "++++++++++++++++"
   ls -al /Geneformer/data/
 
+  echo ">>> Starting training"
   composer -n 8 train.py /mnt/config/parameters.yaml
 
 compute:
@@ -94,6 +97,7 @@ parameters:
   token_dictionary_filename : token_dictionary.pkl
   mlm_probability: 0.15
   # Batching
+  max_duration : 10ep
   train_batch_size: 12
   eval_batch_size: 12
   device_train_microbatch_size: auto
