@@ -52,25 +52,15 @@ def main(cfg: DictConfig):
     data_bucket_name = "srijit-nair-test-bucket"
     data_bucket_key = "geneformer/data"
 
-    data_location = cfg.data_location
-
-    if data_location == "s3":
-        data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
-        token_dictionary_filename = f"{data_bucket_key}/{cfg.token_dictionary_filename}"
-        remote_data = True
-    else:
-        data_dir = cfg.local_data_dir
-        token_dictionary_filename = f"{data_dir}/{cfg.token_dictionary_filename}"
-        remote_data = False
-
-    
+    token_dictionary_filename = f"{cfg.local_data_dir}/{cfg.token_dictionary_filename}"
+    remote_data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
 
     # batch size for training and eval
     train_batch_size = cfg.train_batch_size
     eval_batch_size = cfg.eval_batch_size
     mlm_probability = cfg.mlm_probability
 
-    streaming_dataset_location = f"{data_dir}/streaming/genecorpus_30M_2048.dataset"
+    streaming_dataset_location = f"{remote_data_dir}/streaming/genecorpus_30M_2048.dataset"
     streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
 
     # output directories
@@ -100,12 +90,8 @@ def main(cfg: DictConfig):
     print(model)
 
     #Create streaming dataset
-    if remote_data:
-        streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
-        streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
-    else:
-        streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train" ,batch_size=train_batch_size)
-        streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test" ,batch_size=eval_batch_size)
+    streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
+    streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
 
     #Prepare composer model
     composer_model = HuggingFaceModel(model)

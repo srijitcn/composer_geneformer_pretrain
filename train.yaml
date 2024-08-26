@@ -98,7 +98,7 @@ parameters:
   run_name : geneformer_pretrain
   working_dir : /pretrain/temp
   # Streaming Dataset
-  data_location : local #local or s3
+  data_location : s3 #local or s3
   local_data_dir : /Geneformer/data
   data_bucket_name : srijit-nair-sandbox-bucket
   data_bucket_key : geneformer/data
