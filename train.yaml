@@ -100,7 +100,7 @@ parameters:
   loggers:
     mlflow:
       tracking_uri: databricks
-      experiment_name: mlflow_experiments/geneformer_pretraining
+      experiment_name: mlflow_experiments
 
   seed_val : 42
   run_name : geneformer_pretrain
