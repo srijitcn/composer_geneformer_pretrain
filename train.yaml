@@ -8,15 +8,15 @@ integrations:
   ssh_clone: true # Should be true if using a private repo
 
 command: |
-  cd composer_geneformer_pretrain
-  sh ./geneformer_prep.sh 
-  pip install -r requirements.txt
 
-  cd /
   apt install unzip
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
   sudo ./aws/install
+  
+  cd composer_geneformer_pretrain
+  sh ./geneformer_prep.sh 
+  pip install -r requirements.txt
 
   cd composer_geneformer_pretrain
   aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl .

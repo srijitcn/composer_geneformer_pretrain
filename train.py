@@ -72,7 +72,8 @@ def main(cfg: DictConfig):
     # Read the token dictionary file
     s3 = boto3.resource('s3')
     #token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
-    token_dictionary = pickle.loads(token_dictionary_filename)
+    with open(token_dictionary_filename, "rb") as f:
+        token_dictionary = pickle.loads(f)
 
     ### Load model
     model_config = build_model_config(cfg)
