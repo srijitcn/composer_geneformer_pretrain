@@ -74,7 +74,7 @@ def main(cfg: DictConfig):
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
 
     ### Load model
-    model_config = build_model_config()
+    model_config = build_model_config(cfg)
     model_config["pad_token_id"] = token_dictionary.get("<pad>")
     model_config["vocab_size"] = len(token_dictionary)
 
