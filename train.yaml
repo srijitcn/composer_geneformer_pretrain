@@ -20,10 +20,12 @@ command: |
 
   pip install -r requirements.txt
 
-  cd /Geneformer/
   mkdir /Geneformer/data -p 
   aws s3 cp --recursive s3://srijit-nair-sandbox-bucket/geneformer/data /Geneformer/data
   
+  echo "++++++++++++++++"
+  ls -al /Geneformer/data/
+
   composer -n 8 train.py /mnt/config/parameters.yaml
 
 compute:
