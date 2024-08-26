@@ -1,5 +1,6 @@
 from datasets import load_from_disk
 from streaming import MDSWriter
+from tqdm import tqdm
 
 datadir = "/Geneformer/data"
 dataset_file = f"{datadir}/dataset/genecorpus_30M_2048.dataset"
@@ -27,7 +28,7 @@ print("Preparing training dataset")
 
 train_dataset_list = train_dataset.to_pandas().to_dict('records')
 with MDSWriter(out=f"{streaming_dataset_location}/train", columns=columns, compression='zstd') as out:
-    for x in train_dataset_list:
+    for x in tqdm(train_dataset_list):
         out.write({
             "input_ids" : x["input_ids"],
             "length" : x["length"]
@@ -37,7 +38,7 @@ print("Preparing test dataset")
 
 test_dataset_list = test_dataset.to_pandas().to_dict('records')
 with MDSWriter(out=f"{streaming_dataset_location}/test", columns=columns, compression='zstd') as out:
-    for x in test_dataset_list:
+    for x in tqdm(test_dataset_list):
         out.write({
             "input_ids" : x["input_ids"],
             "length" : x["length"]
