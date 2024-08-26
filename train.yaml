@@ -18,14 +18,14 @@ command: |
   #unzip awscliv2.zip
   #sudo ./aws/install
 
-  #cd composer_geneformer_pretrain
-  #sh ./geneformer_prep.sh 
-  #pip install -r requirements.txt
+  cd composer_geneformer_pretrain
+  sh ./geneformer_prep.sh 
+  pip install -r requirements.txt
 
   #cd /Geneformer/
   #aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/ ./data
   
-  #composer -n 8 train.py /mnt/config/parameters.yaml
+  composer -n 8 train.py /mnt/config/parameters.yaml
 
 compute:
   gpus: 8
