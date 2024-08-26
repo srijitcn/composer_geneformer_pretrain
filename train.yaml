@@ -15,12 +15,10 @@ command: |
   echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
   echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
 
-  apt update
-  apt install unzip
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  unzip awscliv2.zip
-  sudo ./aws/install
+  aws configure
 
+  python -m pip install awscli
+  
   echo ">>> Installing Geneformer"
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
@@ -96,9 +94,8 @@ parameters:
 
   seed_val : 42
   run_name : geneformer_pretrain
-  working_dir : /pretrain/temp
+  working_dir : /pretrain/temp  
   # Streaming Dataset
-  data_location : s3 #local or s3
   local_data_dir : /Geneformer/data
   data_bucket_name : srijit-nair-sandbox-bucket
   data_bucket_key : geneformer/data
