@@ -19,7 +19,6 @@ command: |
   sh ./geneformer_prep.sh 
   pip install -r requirements.txt
 
-  cd composer_geneformer_pretrain
   aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl .
   
   composer -n 8 train.py /mnt/config/parameters.yaml
