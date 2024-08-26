@@ -1,7 +1,6 @@
 mosaicml==0.23.5
 mosaicml-streaming
 datasets
-deepspeed
 triton
 boto3
 omegaconf
