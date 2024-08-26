@@ -11,6 +11,20 @@ command: |
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
   pip install -r requirements.txt
+
+  cd /
+
+  apt install unzip
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+
+  echo "============="
+  aws s3 ls
+  aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl .
+  echo "============="
+
+  cd composer_geneformer_pretrain
   composer -n 8 train.py /mnt/config/parameters.yaml
 
 compute:
@@ -33,7 +47,7 @@ parameters:
   
   fsdp_config:
     sharding_strategy: FULL_SHARD,
-    state_dict_type: full,
+    state_dict_type: sharded,
     cpu_offload: False, # Not supported yet
     mixed_precision: DEFAULT,
     backward_prefetch: BACKWARD_POST,

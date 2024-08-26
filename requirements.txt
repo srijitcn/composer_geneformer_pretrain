@@ -5,3 +5,5 @@ deepspeed
 triton
 boto3
 omegaconf
+tqdm
+
