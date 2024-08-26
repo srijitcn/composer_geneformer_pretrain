@@ -15,10 +15,10 @@ command: |
   echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
   echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
 
+  python -m pip install awscli
+
   aws configure
 
-  python -m pip install awscli
-  
   echo ">>> Installing Geneformer"
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
