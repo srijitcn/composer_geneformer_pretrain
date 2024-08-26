@@ -71,6 +71,23 @@ def main(cfg: DictConfig):
     reproducibility.configure_deterministic_mode()
     reproducibility.seed_all(seed_val)
 
+
+    loggers = [
+        build_logger(name, logger_cfg)
+        for name, logger_cfg in cfg.get('loggers', {}).items()
+    ]
+
+    # Callbacks
+    callbacks = [
+        build_callback(name, callback_cfg)
+        for name, callback_cfg in cfg.get('callbacks', {}).items()
+    ]
+
+    # Algorithms
+    algorithms = [
+        build_algorithm(name, algorithm_cfg)
+        for name, algorithm_cfg in cfg.get('algorithms', {}).items()
+    ]
     # Read the token dictionary file
     #if remote_data:
     #    s3 = boto3.resource('s3')
@@ -128,6 +145,7 @@ def main(cfg: DictConfig):
     trainer = Trainer(
         run_name=cfg.run_name,
         model=composer_model, 
+        algorithms=algorithms,
         train_dataloader=train_dataloader,    
         eval_dataloader=eval_dataloader,
         max_duration=cfg.max_duration,
@@ -146,7 +164,10 @@ def main(cfg: DictConfig):
         load_weights_only=cfg.get("load_weights_only", False),
         python_log_level=cfg.get("python_log_level", None),
         seed=seed_val,        
-        fsdp_config = cfg.get("fsdp_config", None)
+        fsdp_config = cfg.get("fsdp_config", None),
+        loggers=loggers,
+        callbacks=callbacks,
+
     )
     # Start training
     #trainer.fit()
