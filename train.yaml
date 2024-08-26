@@ -9,6 +9,9 @@ integrations:
 
 command: |
 
+  echo "AWS_ACCESS_KEY_ID : $AWS_ACCESS_KEY_ID"
+  echo "AWS_SECRET_ACCESS_KEY : $AWS_SECRET_ACCESS_KEY"
+
   apt update
   apt install unzip
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -19,10 +22,8 @@ command: |
   sh ./geneformer_prep.sh 
   pip install -r requirements.txt
 
-  echo "================="
-  cat ~/.aws/credentials
-
-  aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl .
+  cd /Geneformer/
+  aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/ ./data
   
   composer -n 8 train.py /mnt/config/parameters.yaml
 
