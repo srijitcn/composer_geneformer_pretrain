@@ -71,7 +71,7 @@ parameters:
   run_name : geneformer_pretrain
   working_dir : /pretrain/temp
   # Streaming Dataset
-  data_bucket_name : srijit-nair-test-bucket
+  data_bucket_name : srijit-nair-sandbox-bucket
   data_bucket_key : geneformer/data
   token_dictionary_filename : token_dictionary.pkl
   mlm_probability: 0.15
