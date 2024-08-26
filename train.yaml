@@ -97,7 +97,7 @@ parameters:
   token_dictionary_filename : token_dictionary.pkl
   mlm_probability: 0.15
   # Batching
-  max_duration : 10ep
+  max_duration: 10ep
   train_batch_size: 12
   eval_batch_size: 12
   device_train_microbatch_size: auto
