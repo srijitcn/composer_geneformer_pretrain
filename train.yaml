@@ -9,18 +9,19 @@ integrations:
 
 command: |
 
-  #apt update
-  #apt install unzip
-  #curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  #unzip awscliv2.zip
-  #sudo ./aws/install
+  apt update
+  apt install unzip
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
 
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
+
   pip install -r requirements.txt
 
-  #cd /Geneformer/
-  #aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/ ./data
+  cd /Geneformer/
+  aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/ ./data
   
   composer -n 8 train.py /mnt/config/parameters.yaml
 
@@ -82,6 +83,8 @@ parameters:
   run_name : geneformer_pretrain
   working_dir : /pretrain/temp
   # Streaming Dataset
+  data_location : local #local or s3
+  local_data_dir : /Geneformer/data
   data_bucket_name : srijit-nair-sandbox-bucket
   data_bucket_key : geneformer/data
   token_dictionary_filename : token_dictionary.pkl

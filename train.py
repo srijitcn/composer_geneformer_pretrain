@@ -51,8 +51,19 @@ def main(cfg: DictConfig):
     working_dir = cfg.working_dir
     data_bucket_name = "srijit-nair-test-bucket"
     data_bucket_key = "geneformer/data"
-    data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
-    token_dictionary_filename = cfg.token_dictionary_filename
+
+    data_location = cfg.data_location
+
+    if data_location == "s3":
+        data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
+        token_dictionary_filename = f"{data_bucket_key}/{cfg.token_dictionary_filename}"
+        remote_data = True
+    else:
+        data_dir = cfg.local_data_dir
+        token_dictionary_filename = f"{data_dir}/{cfg.token_dictionary_filename}"
+        remote_data = False
+
+    
 
     # batch size for training and eval
     train_batch_size = cfg.train_batch_size
@@ -70,10 +81,12 @@ def main(cfg: DictConfig):
     reproducibility.seed_all(seed_val)
 
     # Read the token dictionary file
-    s3 = boto3.resource('s3')
-    token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
-    #with open(token_dictionary_filename, "rb") as f:
-    #    token_dictionary = pickle.load(f)
+    if remote_data:
+        s3 = boto3.resource('s3')
+        token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
+    else:
+        with open(token_dictionary_filename, "rb") as f:
+            token_dictionary = pickle.load(f)
 
     ### Load model
     model_config = build_model_config(cfg)
@@ -87,8 +100,12 @@ def main(cfg: DictConfig):
     print(model)
 
     #Create streaming dataset
-    streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
-    streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    if remote_data:
+        streaming_dataset_train = StreamingDataset(remote=f"{streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
+        streaming_dataset_eval = StreamingDataset(remote=f"{streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    else:
+        streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train" ,batch_size=train_batch_size)
+        streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test" ,batch_size=eval_batch_size)
 
     #Prepare composer model
     composer_model = HuggingFaceModel(model)
