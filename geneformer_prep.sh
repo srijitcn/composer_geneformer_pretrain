@@ -10,12 +10,6 @@ cd Geneformer
 git checkout b07f4b1e8893a0923a8fde223fe3b5a60b976d99
 pip install -q .
 
-#create working dirrectory
-mkdir -p /pretrain
-mkdir -p /pretrain/temp
-
-cd /composer_geneformer_pretrain
-
 #Download training data and converting to streaming dataset
 #commenting since we already have it in s3
 #sh ./download_dataset.sh 
