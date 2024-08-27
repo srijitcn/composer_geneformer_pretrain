@@ -62,7 +62,7 @@ max_duration: 10ep
 train_batch_size: 12
 eval_batch_size: 12
 device_train_microbatch_size: auto
-precision: fp16
+precision: fp32
 # Logging
 progress_bar: false
 log_to_console: true
