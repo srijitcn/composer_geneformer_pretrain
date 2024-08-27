@@ -28,6 +28,7 @@ command: |
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
     
+  mkdir /mlflow-tracking
   mkdir /Geneformer/data -p 
   echo ">>> Copying data from s3.. might take few mins"
   aws s3 ls s3://srijit-nair-sandbox-bucket/geneformer/data
@@ -63,13 +64,13 @@ parameters:
     num_attention_heads: 4
   
   fsdp_config:
-    sharding_strategy: FULL_SHARD,
-    state_dict_type: sharded,
-    cpu_offload: False, # Not supported yet
-    mixed_precision: DEFAULT,
-    backward_prefetch: BACKWARD_POST,
-    activation_checkpointing: False,
-    activation_cpu_offload: False,
+    sharding_strategy: FULL_SHARD
+    state_dict_type: sharded
+    cpu_offload: False # Not supported yet
+    mixed_precision: DEFAULT
+    backward_prefetch: BACKWARD_POST
+    activation_checkpointing: False
+    activation_cpu_offload: False
     verbose: True
 
   # Optimization
@@ -122,4 +123,5 @@ parameters:
   #Checkpoint to remote object store
   save_interval: 5ep
   save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
-  save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
+  save_folder: "/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
+#  save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
