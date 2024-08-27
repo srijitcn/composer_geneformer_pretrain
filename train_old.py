@@ -120,7 +120,7 @@ model.train()
 print(model)
 #Create streaming dataset
 #streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train",batch_size=geneformer_batch_size)
-streaming_dataset_train = StreamingDataset(remote=f"s3://srijit-nair-sandbox-bucket/geneformer/data/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=geneformer_batch_size)
+streaming_dataset_train = StreamingDataset(remote=f"s3://srijit-nair-sandbox-bucket/geneformer/data/streaming/genecorpus_30M_2048.dataset/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=geneformer_batch_size)
 #streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test",batch_size=geneformer_batch_size)
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 #Prepare composer model
