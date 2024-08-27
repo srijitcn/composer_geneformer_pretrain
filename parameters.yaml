@@ -60,6 +60,7 @@ mlm_probability: 0.15
 # Batching
 max_duration: 10ep
 train_batch_size: 12
+train_subset_num_batches : 150
 eval_batch_size: 12
 global_train_batch_size: 12
 # Logging
