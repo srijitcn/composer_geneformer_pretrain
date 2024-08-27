@@ -18,6 +18,8 @@ from composer.models.huggingface import HuggingFaceModel
 from composer.utils import reproducibility
 from composer import Trainer
 from streaming import MDSWriter, StreamingDataset
+
+import boto3
 #### Env variables
 #os.environ["NCCL_DEBUG"] = "INFO"
 os.environ["OMPI_MCA_opal_cuda_support"] = "true"
@@ -86,8 +88,12 @@ if os.path.isfile(model_output_file) is True:
 # make training and model output directories
 subprocess.call(f"mkdir -p {training_output_dir}", shell=True)
 subprocess.call(f"mkdir -p {model_output_dir}", shell=True)
-with open(f"{datadir}/token_dictionary.pkl", "rb") as fp:
-    token_dictionary = pickle.load(fp)
+
+#with open(f"{datadir}/token_dictionary.pkl", "rb") as fp:
+#    token_dictionary = pickle.load(fp)
+s3 = boto3.resource('s3')
+token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
+
 ##2  Get model and tokenizer
 config = {
     "hidden_size": num_embed_dim,
