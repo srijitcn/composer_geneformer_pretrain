@@ -11,8 +11,8 @@ command: |
   cd composer_geneformer_pretrain
   sh commands.sh
   echo ">>> Starting training"
-  #composer -n 8 train.py parameters.yaml
-  composer -n 8 train_old.py
+  composer -n 8 train.py parameters.yaml
+  #composer -n 8 train_old.py
 
 compute:
   gpus: 8
