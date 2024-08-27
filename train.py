@@ -140,7 +140,7 @@ def main(cfg: DictConfig):
 
     # Create Trainer Object
     trainer = Trainer(
-        run_name=cfg.run_name,
+        #run_name=cfg.run_name,
         model=composer_model, 
         algorithms=algorithms,
         train_dataloader=train_dataloader,    
