@@ -125,21 +125,10 @@ def main(cfg: DictConfig):
     composer_model = HuggingFaceModel(model)
 
     # Build optimizer
-    #optimizer = build_optimizer(cfg.optimizer, model)
+    optimizer = build_optimizer(cfg.optimizer, model)
 
     # Scheduler
-    #scheduler = build_scheduler(cfg.scheduler)
-
-    optimizer = AdamW(
-        params=composer_model.parameters(),
-        lr=3e-5, betas=(0.9, 0.98),
-        eps=1e-6, weight_decay=3e-6
-    )
-    
-    scheduler = LinearLR(
-        optimizer, start_factor=1.0,
-        end_factor=0, total_iters=150
-    )
+    scheduler = build_scheduler(cfg.scheduler)
 
     #data collator
     data_collator = DataCollatorForLanguageModeling(
