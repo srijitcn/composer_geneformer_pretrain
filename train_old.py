@@ -92,7 +92,7 @@ subprocess.call(f"mkdir -p {model_output_dir}", shell=True)
 #with open(f"{datadir}/token_dictionary.pkl", "rb") as fp:
 #    token_dictionary = pickle.load(fp)
 s3 = boto3.resource('s3')
-token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
+token_dictionary = pickle.loads(s3.Bucket("srijit-nair-sandbox-bucket").Object("geneformer/data/token_dictionary.pkl").get()['Body'].read())
 
 ##2  Get model and tokenizer
 config = {
