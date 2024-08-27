@@ -49,10 +49,10 @@ def main(cfg: DictConfig):
     np.random.seed(seed_val)
 
     working_dir = cfg.working_dir
-    data_bucket_name = "srijit-nair-test-bucket"
-    data_bucket_key = "geneformer/data"
+    data_bucket_name = cfg.data_bucket_name
+    data_bucket_key = cfg.data_bucket_key
 
-    token_dictionary_filename = f"{cfg.local_data_dir}/{cfg.token_dictionary_filename}"
+    token_dictionary_filename = cfg.token_dictionary_filename
     remote_data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
 
     # batch size for training and eval
