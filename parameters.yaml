@@ -59,10 +59,10 @@ streaming_dataset_location : streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
 # Batching
 max_duration: 10ep
-train_batch_size: 16
-eval_batch_size: 16
-device_train_microbatch_size: 16
-global_train_batch_size: 16
+train_batch_size: 8
+eval_batch_size: 8
+device_train_microbatch_size: 8
+global_train_batch_size: 8
 # Logging
 progress_bar: false
 log_to_console: true
