@@ -62,13 +62,12 @@ max_duration: 10ep
 train_batch_size: 12
 eval_batch_size: 12
 device_train_microbatch_size: auto
-precision: fp32
 # Logging
 progress_bar: false
 log_to_console: true
 console_log_interval: 1ba
-eval_interval: 2000ba
-global_train_batch_size: 96
+eval_interval: 2ep
+#global_train_batch_size: 96
 #Checkpoint to remote object store
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
