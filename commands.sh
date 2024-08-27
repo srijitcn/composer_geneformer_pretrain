@@ -27,6 +27,6 @@ sh download_dataset.sh
 #mkdir /Geneformer/data -p 
 #aws s3 cp --quiet --recursive s3://srijit-nair-sandbox-bucket/geneformer/data /Geneformer/data
 #echo "done"
-#python create_mds.py
+python create_mds.py
 
 
