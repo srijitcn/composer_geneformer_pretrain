@@ -55,6 +55,7 @@ local_data_dir : /Geneformer/data
 data_bucket_name : srijit-nair-sandbox-bucket
 data_bucket_key : geneformer/data
 token_dictionary_filename : token_dictionary.pkl
+streaming_dataset_location : /streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
 # Batching
 max_duration: 10ep

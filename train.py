@@ -54,14 +54,15 @@ def main(cfg: DictConfig):
 
     token_dictionary_filename = cfg.token_dictionary_filename
     remote_data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
+    streaming_dataset_location = cfg.streaming_dataset_location
 
     # batch size for training and eval
     train_batch_size = cfg.train_batch_size
     eval_batch_size = cfg.eval_batch_size
     mlm_probability = cfg.mlm_probability
 
-    remote_streaming_dataset_location = f"{remote_data_dir}/streaming/genecorpus_30M_2048.dataset"
-    local_streaming_dataset_location = f"{cfg.local_data_dir}/streaming/genecorpus_30M_2048.dataset"
+    remote_streaming_dataset_location = f"{remote_data_dir}/{streaming_dataset_location}"
+    local_streaming_dataset_location = f"{cfg.local_data_dir}/{streaming_dataset_location}"
     streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
 
     # output directories
@@ -89,13 +90,8 @@ def main(cfg: DictConfig):
         for name, algorithm_cfg in cfg.get('algorithms', {}).items()
     ]
     # Read the token dictionary file
-    #if remote_data:
     s3 = boto3.resource('s3')
-    print(f"Bucket entry:: {data_bucket_name}/{data_bucket_key}/{token_dictionary_filename}")
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
-    #else:
-    with open(token_dictionary_filename, "rb") as f:
-        token_dictionary = pickle.load(f)
 
     ### Load model
     model_config = build_model_config(cfg)
@@ -110,10 +106,10 @@ def main(cfg: DictConfig):
 
     #Create streaming dataset
 
-    #streaming_dataset_train = StreamingDataset(remote=f"{remote_streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
+    streaming_dataset_train = StreamingDataset(remote=f"{remote_streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
     #streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
     
-    streaming_dataset_train = StreamingDataset(local=f"{local_streaming_dataset_location}/train" ,batch_size=train_batch_size)
+    #streaming_dataset_train = StreamingDataset(local=f"{local_streaming_dataset_location}/train" ,batch_size=train_batch_size)
     #streaming_dataset_eval = StreamingDataset(local=f"{local_streaming_dataset_location}/test" ,batch_size=eval_batch_size)
 
     #Prepare composer model
