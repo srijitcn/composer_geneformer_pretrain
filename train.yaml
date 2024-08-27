@@ -14,6 +14,7 @@ command: |
   composer -n 8 train.py parameters.yaml
   #composer -n 8 train_old.py
 
+
 compute:
   gpus: 8
   cluster: r8z11

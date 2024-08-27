@@ -47,7 +47,7 @@ def update_batch_size_info(cfg: DictConfig):
     return cfg
 
 def build_model_config(cfg:DictConfig):
-    return om.to_container(cfg)
+    return om.to_container(cfg.get("model_config",{}))
 
 def log_config(cfg: DictConfig):
     print(om.to_yaml(cfg))
