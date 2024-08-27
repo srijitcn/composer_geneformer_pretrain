@@ -29,5 +29,3 @@ echo ">>> Copying data from s3.. might take few mins"
 #aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl /Geneformer/data/token_dictionary.pkl
 aws s3 cp --quiet --recursive s3://srijit-nair-sandbox-bucket/geneformer/data /Geneformer/data
 echo "done"
-echo "++++++++++++++++"
-ls -al /Geneformer/data/  
