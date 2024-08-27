@@ -1,5 +1,5 @@
 mosaicml==0.23.5
-mosaicml-streaming
+mosaicml-streaming==0.8.0
 datasets
 triton
 boto3

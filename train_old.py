@@ -158,10 +158,10 @@ trainer = Trainer(
     save_overwrite=True,
     run_name=run_name,
     seed=seed_val,
-    deepspeed_config={
-        "train_batch_size": 8,
-        "fp16": {"enabled": True},
-    }
+    #deepspeed_config={
+    #    "train_batch_size": 8,
+    #    "fp16": {"enabled": True},
+    #}
     #fsdp_config = {
     #    "sharding_strategy": "FULL_SHARD",
     #    "state_dict_type": "sharded",
