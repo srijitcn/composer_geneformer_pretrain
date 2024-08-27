@@ -41,7 +41,7 @@ from cfgutils import *
 
 def main(cfg: DictConfig):
     #### Env variables
-    #os.environ["NCCL_DEBUG"] = "INFO"
+    os.environ["NCCL_DEBUG"] = "INFO"
     #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
     #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
