@@ -4,48 +4,44 @@ image: mosaicml/pytorch:2.2.2_cu121-python3.11-ubuntu20.04
 integrations:
 - integration_type: git_repo
   git_repo: srijitcn/composer_geneformer_pretrain
-  git_branch: main # use your branch
+  git_branch: yen_test # use your branch
   ssh_clone: true # Should be true if using a private repo
 
-command: |
-
-  echo ">>> Configuring aws"
-  
+command: |  
   apt update
-  apt install unzip
+  apt install unzip nano
+  
+  echo ">>> Configuring aws"
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
   sudo ./aws/install
 
   mkdir ~/.aws
-  echo "[default]" >> ~/.aws/credentials
-  echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
-  echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
-  
+  cp /secrets/aws/credentials ~/.aws/credentials
   echo "[default]" >> ~/.aws/config
   echo "region=us-west-2" >> ~/.aws/config
   echo "output=json" >> ~/.aws/config
-
   cat ~/.aws/credentials
   cat ~/.aws/config
-
+  
   echo ">>> Installing Geneformer"
   cd composer_geneformer_pretrain
   sh ./geneformer_prep.sh 
-
-  echo ">>> Installing dependencies"
-  pip install -q -r requirements.txt
-
+    
   mkdir /Geneformer/data -p 
-
   echo ">>> Copying data from s3.. might take few mins"
-  #aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl /Geneformer/data/token_dictionary.pkl
+  aws s3 ls s3://srijit-nair-sandbox-bucket/geneformer/data
   aws s3 cp --quiet --recursive s3://srijit-nair-sandbox-bucket/geneformer/data /Geneformer/data
+  #aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl /Geneformer/data/token_dictionary.pkl
   echo "done"
   echo "++++++++++++++++"
   ls -al /Geneformer/data/  
 
+  echo ">>> Installing dependencies"
+  pip install -q -r requirements.txt
+
   echo ">>> Starting training"
+  tail -f /dev/null
   composer -n 8 train.py /mnt/config/parameters.yaml
 
 compute:

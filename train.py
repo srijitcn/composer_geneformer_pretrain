@@ -1,49 +1,33 @@
-
-
-##1 Set parameters
-
 import datetime
-
-# imports
 import os
-
 import pickle
 import random
 import subprocess
-
 import numpy as np
 import pytz
-
 import boto3
-
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LinearLR
-
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
-
 import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
-
 from composer.models.huggingface import HuggingFaceModel
 from composer.utils import reproducibility
 from composer import Trainer
-
 from streaming import MDSWriter, StreamingDataset
-
 from omegaconf import DictConfig
-
 from cfgutils import *
-
 
 #### Env variables
 #os.environ["NCCL_DEBUG"] = "INFO"
 #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
 #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
+os.environ["MASTER_ADDR"]='127.0.0.1'
+os.environ["MASTER_PORT"]='13234'
 
 def main(cfg: DictConfig):
-
     seed_val = cfg.seed_val
     random.seed(seed_val)
     np.random.seed(seed_val)
@@ -91,10 +75,9 @@ def main(cfg: DictConfig):
     print(model)
 
     #Create streaming dataset
-
     #streaming_dataset_train = StreamingDataset(remote=f"{remote_streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
     #streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
-    
+
     streaming_dataset_train = StreamingDataset(local=f"{local_streaming_dataset_location}/train" ,batch_size=train_batch_size)
     streaming_dataset_eval = StreamingDataset(local=f"{local_streaming_dataset_location}/test" ,batch_size=eval_batch_size)
 
@@ -109,26 +92,26 @@ def main(cfg: DictConfig):
 
     #data collator
     data_collator = DataCollatorForLanguageModeling(
-            tokenizer=tokenizer, 
-            mlm=True, 
+            tokenizer=tokenizer,
+            mlm=True,
             mlm_probability=mlm_probability
         )
 
     train_dataloader = DataLoader(streaming_dataset_train,
-                            shuffle=False, 
-                            drop_last=False, 
+                            shuffle=False,
+                            drop_last=False,
                             collate_fn=data_collator)
 
     eval_dataloader = DataLoader(streaming_dataset_eval,
-                            shuffle=False, 
-                            drop_last=False, 
+                            shuffle=False,
+                            drop_last=False,
                             collate_fn=data_collator)
 
     # Create Trainer Object
     trainer = Trainer(
         run_name=cfg.run_name,
-        model=composer_model, 
-        train_dataloader=train_dataloader,    
+        model=composer_model,
+        train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_duration=cfg.max_duration,
         eval_interval=cfg.eval_interval,
@@ -145,7 +128,7 @@ def main(cfg: DictConfig):
         load_path=cfg.get("load_path", None),
         load_weights_only=cfg.get("load_weights_only", False),
         python_log_level=cfg.get("python_log_level", None),
-        seed=seed_val,        
+        seed=seed_val,
         fsdp_config = cfg.get("fsdp_config", None)
     )
     # Start training
