@@ -170,10 +170,10 @@ def main(cfg: DictConfig):
 
     )
     # Start training
-    #trainer.fit()
+    trainer.fit()
 
-    #print(trainer.state.train_metrics)
-    #print(trainer.state.eval_metrics)
+    print(trainer.state.train_metrics)
+    print(trainer.state.eval_metrics)
 
     #load the model back and run some test
 
