@@ -45,7 +45,7 @@ callbacks:
 loggers:
   mlflow:
     tracking_uri: databricks
-    experiment_name: mlflow_experiments/geneformer_pretraining
+    experiment_name: /Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining
 
 device : gpu
 seed_val : 42
