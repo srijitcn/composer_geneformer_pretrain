@@ -103,6 +103,9 @@ def main(cfg: DictConfig):
     model_config["pad_token_id"] = token_dictionary.get("<pad>")
     model_config["vocab_size"] = len(token_dictionary)
 
+    print("=============================")
+    print(model_config)
+
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
