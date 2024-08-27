@@ -41,9 +41,9 @@ from cfgutils import *
 
 def main(cfg: DictConfig):
     #### Env variables
-    os.environ["NCCL_DEBUG"] = "INFO"
-    os.environ["OMPI_MCA_opal_cuda_support"] = "true"
-    os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
+    #os.environ["NCCL_DEBUG"] = "INFO"
+    #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
+    #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
     seed_val = cfg.seed_val
     random.seed(seed_val)
@@ -72,7 +72,6 @@ def main(cfg: DictConfig):
     ### Start processing
     reproducibility.configure_deterministic_mode()
     reproducibility.seed_all(seed_val)
-
 
     loggers = [
         build_logger(name, logger_cfg)
