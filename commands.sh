@@ -8,7 +8,7 @@ pip install -q -r requirements.txt
 #create working dirrectory
 mkdir -p /pretrain/temp
 
-sh download_dataset.sh
+#sh download_dataset.sh
 ##################################################
 ##the following code is only needed to copy the dataset from s3 to locally create streaming dataset
 #echo ">>> Configuring aws"
@@ -27,6 +27,6 @@ sh download_dataset.sh
 #mkdir /Geneformer/data -p 
 #aws s3 cp --quiet --recursive s3://srijit-nair-sandbox-bucket/geneformer/data /Geneformer/data
 #echo "done"
-python create_mds.py
+#python create_mds.py
 
 

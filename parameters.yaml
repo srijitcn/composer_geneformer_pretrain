@@ -53,7 +53,7 @@ run_name : geneformer_pretrain
 working_dir : /pretrain/temp  
 
 # Streaming Dataset
-data_location : local #local vs remote
+data_location : remote #local vs remote
 local_data_dir : /Geneformer/data
 data_bucket_name : srijit-nair-sandbox-bucket
 data_bucket_key : geneformer/data
