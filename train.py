@@ -21,7 +21,7 @@ from omegaconf import DictConfig
 from cfgutils import *
 
 #### Env variables
-#os.environ["NCCL_DEBUG"] = "INFO"
+os.environ["NCCL_DEBUG"] = "INFO"
 #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
 #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 os.environ["MASTER_ADDR"]='127.0.0.1'
