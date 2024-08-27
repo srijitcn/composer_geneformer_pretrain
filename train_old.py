@@ -162,17 +162,17 @@ trainer = Trainer(
     #    "train_batch_size": 8,
     #    "fp16": {"enabled": True},
     #}
-    #fsdp_config = {
-    #    "sharding_strategy": "FULL_SHARD",
-    #    "state_dict_type": "sharded",
-    #    "sharded_ckpt_prefix_dir": "ba{batch}-shards",
-    #    "cpu_offload": False, # Not supported yet
-    #    "mixed_precision": "DEFAULT",
-    #    "backward_prefetch": "BACKWARD_POST",
-    #    "activation_checkpointing": False,
-    #    "activation_cpu_offload": False,
-    #    "verbose": True
-    #}
+    fsdp_config = {
+        "sharding_strategy": "FULL_SHARD",
+        "state_dict_type": "sharded",
+        "sharded_ckpt_prefix_dir": "ba{batch}-shards",
+        "cpu_offload": False, # Not supported yet
+        "mixed_precision": "DEFAULT",
+        "backward_prefetch": "BACKWARD_POST",
+        "activation_checkpointing": False,
+        "activation_cpu_offload": False,
+        "verbose": True
+    }
 )
 # Start training
  
