@@ -66,6 +66,11 @@ def main(cfg: DictConfig):
     local_streaming_dataset_location = f"{cfg.local_data_dir}/{streaming_dataset_location}"
     streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
 
+    if cfg.data_location == "local":
+        data_local = True
+    else:
+        data_local = False
+
     # output directories
 
     #############################################
@@ -106,11 +111,12 @@ def main(cfg: DictConfig):
 
     #Create streaming dataset
 
-    streaming_dataset_train = StreamingDataset(remote=f"{remote_streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
-    #streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
-    
-    #streaming_dataset_train = StreamingDataset(local=f"{local_streaming_dataset_location}/train" ,batch_size=train_batch_size)
-    #streaming_dataset_eval = StreamingDataset(local=f"{local_streaming_dataset_location}/test" ,batch_size=eval_batch_size)
+    if data_local:
+        streaming_dataset_train = StreamingDataset(local=f"{local_streaming_dataset_location}/train" ,batch_size=train_batch_size)
+        #streaming_dataset_eval = StreamingDataset(local=f"{local_streaming_dataset_location}/test" ,batch_size=eval_batch_size)        
+    else:
+        streaming_dataset_train = StreamingDataset(remote=f"{remote_streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
+        #streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
 
     #Prepare composer model
     composer_model = HuggingFaceModel(model)
