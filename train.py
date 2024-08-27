@@ -41,7 +41,7 @@ from cfgutils import *
 
 def main(cfg: DictConfig):
     #### Env variables
-    os.environ["NCCL_DEBUG"] = "INFO"
+    #os.environ["NCCL_DEBUG"] = "INFO"
 
     seed_val = cfg.seed_val
     random.seed(seed_val)

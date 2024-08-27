@@ -77,4 +77,5 @@ eval_interval: 2ep
 #Checkpoint to remote object store
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
-save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
+#save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
+save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints"
