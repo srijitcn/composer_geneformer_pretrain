@@ -114,7 +114,7 @@ model.train()
 print(model)
 #Create streaming dataset
 streaming_dataset_train = StreamingDataset(local=f"{streaming_dataset_location}/train",batch_size=geneformer_batch_size)
-streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test",batch_size=geneformer_batch_size)
+#streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_location}/test",batch_size=geneformer_batch_size)
 #eval_dataloader = DataLoader(train_test_split["test"],batch_size=geneformer_batch_size, shuffle=False, drop_last=False, collate_fn=data_collator)
 #Prepare composer model
 composer_model = HuggingFaceModel(model)
@@ -137,15 +137,15 @@ train_dataloader = DataLoader(streaming_dataset_train,
                         shuffle=False, 
                         drop_last=False, 
                         collate_fn=data_collator)
-eval_dataloader = DataLoader(streaming_dataset_eval,
-                        shuffle=False, 
-                        drop_last=False, 
-                        collate_fn=data_collator)
+#eval_dataloader = DataLoader(streaming_dataset_eval,
+#                        shuffle=False, 
+#                        drop_last=False, 
+#                        collate_fn=data_collator)
 # Create Trainer Object
 trainer = Trainer(
     model=composer_model, 
     train_dataloader=train_dataloader,    
-    eval_dataloader=eval_dataloader,
+    #eval_dataloader=eval_dataloader,
     eval_interval="5ep",
     eval_subset_num_batches=1000,
     max_duration="10ep",
