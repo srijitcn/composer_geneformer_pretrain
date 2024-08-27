@@ -44,7 +44,6 @@ def main(cfg: DictConfig):
     os.environ["NCCL_DEBUG"] = "INFO"
     #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
     #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
-    print(os.getenv('DATABRICKS_TOKEN'))
 
     seed_val = cfg.seed_val
     random.seed(seed_val)
@@ -194,4 +193,5 @@ if __name__ == '__main__':
     cli_cfg = om.from_cli(args_list)
     cfg = om.merge(yaml_cfg, cli_cfg)
     cfg = cast(DictConfig, cfg)  # for type checking
+    print(os.getenv('DATABRICKS_TOKEN'))
     main(cfg)
