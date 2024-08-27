@@ -107,7 +107,7 @@ def main(cfg: DictConfig):
     #Create streaming dataset
 
     streaming_dataset_train = StreamingDataset(remote=f"{remote_streaming_dataset_location}/train", local=f"{streaming_dataset_cache_location}/train" ,batch_size=train_batch_size)
-    #streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
     
     #streaming_dataset_train = StreamingDataset(local=f"{local_streaming_dataset_location}/train" ,batch_size=train_batch_size)
     #streaming_dataset_eval = StreamingDataset(local=f"{local_streaming_dataset_location}/test" ,batch_size=eval_batch_size)
@@ -133,10 +133,10 @@ def main(cfg: DictConfig):
                             drop_last=False, 
                             collate_fn=data_collator)
 
-    #eval_dataloader = DataLoader(streaming_dataset_eval,
-    #                        shuffle=False, 
-    #                        drop_last=False, 
-    #                        collate_fn=data_collator)
+    eval_dataloader = DataLoader(streaming_dataset_eval,
+                            shuffle=False, 
+                            drop_last=False, 
+                            collate_fn=data_collator)
 
     # Create Trainer Object
     trainer = Trainer(
@@ -144,7 +144,7 @@ def main(cfg: DictConfig):
         model=composer_model, 
         algorithms=algorithms,
         train_dataloader=train_dataloader,    
-        #eval_dataloader=eval_dataloader,
+        eval_dataloader=eval_dataloader,
         max_duration=cfg.max_duration,
         eval_interval=cfg.eval_interval,
         optimizers=optimizer,
@@ -155,7 +155,7 @@ def main(cfg: DictConfig):
         save_interval=cfg.get("save_interval", "5ep"),
         save_num_checkpoints_to_keep=cfg.get("save_num_checkpoints_to_keep",1),
         train_subset_num_batches=cfg.get("train_subset_num_batches", -1),
-        #eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
+        eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
         save_overwrite=cfg.get("save_overwrite", False),
         load_path=cfg.get("load_path", None),
         load_weights_only=cfg.get("load_weights_only", False),
