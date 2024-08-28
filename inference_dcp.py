@@ -56,11 +56,15 @@ def main(cfg: DictConfig):
     print("Loading weights")    
     model_state_dict = model.state_dict()
     
-    print(model_state_dict)
     #st_dict = { f"state.model.{k}":v  for k,v in model_state_dict.items()}
+    st_dict = {
+        "state" : {
+            "model" : model_state_dict
+        }
+    }
 
     dcp.load(
-        state_dict=model_state_dict,
+        state_dict=st_dict,
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_prefix, 
             destination_path=local_checkpoint_path,
