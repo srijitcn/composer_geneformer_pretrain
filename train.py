@@ -173,7 +173,9 @@ def main(cfg: DictConfig):
         fsdp_config = cfg.get("fsdp_config", None),
         loggers=loggers,
         callbacks=callbacks,
-
+        # To resume from checkpoints in save_folder
+        autoresume=cfg.get("autoresume", False),
+        run_name='multi-gpu-test-E55s6t '
     )
     # Start training
     trainer.fit()
@@ -193,5 +195,4 @@ if __name__ == '__main__':
     cli_cfg = om.from_cli(args_list)
     cfg = om.merge(yaml_cfg, cli_cfg)
     cfg = cast(DictConfig, cfg)  # for type checking
-    print(os.getenv('DATABRICKS_TOKEN'))
     main(cfg)
