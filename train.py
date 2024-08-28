@@ -152,7 +152,7 @@ def main(cfg: DictConfig):
         eval_dataloader=eval_dataloader,
         max_duration=cfg.max_duration,
         eval_interval=cfg.eval_interval,
-        optimizer=optimizer,
+        optimizers=optimizer,
         schedulers=[scheduler],
         device=cfg.get("device", "gpu"),
         device_train_microbatch_size=cfg.get("device_train_microbatch_size","auto"),
