@@ -52,7 +52,11 @@ def main(cfg: DictConfig):
     ##load model weights
     print("Loading weights")
     #copy weight to local folder
-    s3.download_file(data_bucket_name, checkpoint_prefix, local_weights_file)
+    weight_content = s3.Bucket(data_bucket_name).Object(checkpoint_prefix).get()["Body"]
+    with open(local_weights_file, 'wb') as f:
+        for chunk in iter(lambda: weight_content.read(4096), b''):
+            f.write(chunk)
+
     model.load_state_dict(torch.load(local_weights_file))
 
     ##Run inference
