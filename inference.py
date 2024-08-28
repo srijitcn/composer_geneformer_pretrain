@@ -11,11 +11,11 @@ import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
 
 import torch
-import torch.distributed._shard.checkpoint as dist_cp
+from torch.distributed.checkpoint import state_dict_loader
 from torch.utils.data import DataLoader
 
-from composer.utils.checkpoint import load_checkpoint
- 
+from composer.utils.checkpoint import DistCPObjectStoreReader
+
 
 from streaming import MDSWriter, StreamingDataset
 
@@ -23,6 +23,7 @@ def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
     checkpoint_path = f"{cfg.save_folder}/ep10-ba10000"
+    local_checkpoint_path = f"{working_dir}/checkpoint"
     data_bucket_name = cfg.data_bucket_name
     data_bucket_key = cfg.data_bucket_key
     token_dictionary_filename = cfg.token_dictionary_filename
@@ -30,7 +31,7 @@ def main(cfg: DictConfig):
     streaming_dataset_location = cfg.streaming_dataset_location
 
     remote_streaming_dataset_location = f"{remote_data_dir}/{streaming_dataset_location}"
-    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
+    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"    
     mlm_probability = cfg.mlm_probability
     # Read the token dictionary file
     s3 = boto3.resource('s3')
@@ -49,15 +50,11 @@ def main(cfg: DictConfig):
     state_dict = {
         "model": model.state_dict()
     }
-    
-    #dist_cp.load_state_dict(
-    #    state_dict=state_dict,
-    #    storage_reader= dist_cp.FileSystemReader(checkpoint_path),
-    #    no_dist=True,
-    #)
-    #model.load_state_dict(state_dict["model"])
-
-    load_checkpoint(checkpoint_path, state_dict, None)
+    state_dict_loader.load(
+        state_dict=state_dict,
+        storage_reader= DistCPObjectStoreReader(source_path=checkpoint_path, destination_path=local_checkpoint_path)
+    )
+    model.load_state_dict(state_dict["model"])
 
 
     ##Run inference
