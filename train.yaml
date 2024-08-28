@@ -9,7 +9,6 @@ integrations:
 
 command: |
   cd composer_geneformer_pretrain
-  echo $DATABRICKS_TOKEN
   sh commands.sh
   echo ">>> Starting training"
   composer -n 8 train.py parameters.yaml
