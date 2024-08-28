@@ -72,4 +72,4 @@ def main(cfg: DictConfig):
     
     
     test_data = next(iter(eval_dataloader))
-    print(test_data)
+    print(f"Test data: {test_data}")
