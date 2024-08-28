@@ -36,6 +36,7 @@ def main(cfg: DictConfig):
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
 
     ### Load model
+    print("Loading model")
     model_config = build_model_config(cfg,token_dictionary)
 
     config = BertConfig(**model_config)
@@ -43,6 +44,7 @@ def main(cfg: DictConfig):
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
     
     ##load model weights
+    print("Loading weights")
     state_dict = {
         "model": model.state_dict()
     }
@@ -55,6 +57,7 @@ def main(cfg: DictConfig):
 
 
     ##Run inference
+    print("Getting test data")
     streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, 
@@ -66,6 +69,7 @@ def main(cfg: DictConfig):
                             shuffle=False, 
                             drop_last=False, 
                             collate_fn=data_collator)
+    
     
     test_data = next(iter(eval_dataloader))
     print(test_data)
