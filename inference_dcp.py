@@ -59,7 +59,7 @@ def main(cfg: DictConfig):
     #st_dict = {
     #    "model" : model_state_dict
     #}
-    st_dict = { f"model.{k}":v  for k,v in model_state_dict.items()}
+    st_dict = { f"state.model.model.{k}":v  for k,v in model_state_dict.items()}
     
     dcp.load_state_dict(
         state_dict={"model":st_dict},
@@ -74,7 +74,7 @@ def main(cfg: DictConfig):
     )
 
     #unnecessary plumbing work...argh
-    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="model.")
+    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="state.model.model.")
     model.load_state_dict(st_dict)
 
     ##Run inference
