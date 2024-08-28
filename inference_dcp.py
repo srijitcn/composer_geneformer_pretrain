@@ -57,10 +57,8 @@ def main(cfg: DictConfig):
     model_state_dict = model.state_dict()
     
     #st_dict = { f"state.model.{k}":v  for k,v in model_state_dict.items()}
-    st_dict = {
-        "state" : {
-            "model" : model_state_dict
-        }
+    st_dict = {        
+        "model" : model_state_dict        
     }
 
     dcp.load(

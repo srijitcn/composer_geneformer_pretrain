@@ -13,6 +13,7 @@ from geneformer.pretrainer import GeneformerPreCollator
 import torch
 import torch.distributed.checkpoint as dcp
 from torch.utils.data import DataLoader
+from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 from composer.utils.dist import initialize_dist
 from composer.utils.checkpoint import DistCPObjectStoreReader
@@ -54,8 +55,8 @@ def main(cfg: DictConfig):
 
     model_state_dict = torch.load(local_weights_file)
 
-    #unnecessary plumbing work...argh
-    st_dict = { k.replace("model.",""):v  for k,v in model_state_dict["state"]["model"].items()}
+    #removing prefix from huggingface model
+    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="model.")
 
     ### Load model
     print("Loading model")
