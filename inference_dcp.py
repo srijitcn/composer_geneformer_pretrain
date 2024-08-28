@@ -36,6 +36,7 @@ def main(cfg: DictConfig):
     remote_streaming_dataset_location = f"{remote_data_dir}/{streaming_dataset_location}"
     streaming_dataset_cache_location = f"{working_dir}/streaming/cache"    
     mlm_probability = cfg.mlm_probability
+    eval_batch_size = cfg.eval_batch_size
     # Read the token dictionary file
     s3 = boto3.resource('s3')
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
@@ -56,7 +57,7 @@ def main(cfg: DictConfig):
     model_state_dict = model.state_dict()
     print(model_state_dict)
 
-    st_dict = { f"state.model.{k}":v  for k,v in model_state_dict["state"]["model"].items()}
+    st_dict = { f"state.model.{k}":v  for k,v in model_state_dict.items()}
 
     dcp.load(
         state_dict=st_dict,
