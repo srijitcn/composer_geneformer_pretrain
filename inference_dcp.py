@@ -52,14 +52,14 @@ def main(cfg: DictConfig):
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
     
     ##load model weights
-    print("Loading weights")
-    model_state_dict = {
-        "state": {
-            "model": model.state_dict()
-        }
-    }
+    print("Loading weights")    
+    model_state_dict = model.state_dict()
+    print(model_state_dict)
+
+    st_dict = { f"state.model.{k}":v  for k,v in model_state_dict["state"]["model"].items()}
+
     dcp.load(
-        state_dict=model_state_dict,
+        state_dict=st_dict,
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_prefix, 
             destination_path=local_checkpoint_path,
@@ -71,7 +71,7 @@ def main(cfg: DictConfig):
     )
 
      #unnecessary plumbing work...argh
-    st_dict = { k.replace("model.",""):v  for k,v in model_state_dict["state"]["model"].items()}
+    st_dict = { k.replace("state.model",""):v  for k,v in model_state_dict.items()}
     model.load_state_dict(st_dict)
 
 
