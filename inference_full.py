@@ -56,7 +56,7 @@ def main(cfg: DictConfig):
     print("Loading model")
     model_config = build_model_config(cfg,token_dictionary)
     config = BertConfig(**model_config)
-    model = BertForMaskedLM(config=config, state_dict=model_state_dict)
+    model = BertForMaskedLM.from_pretrained(config=config, state_dict=model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
     
     ##Run inference
