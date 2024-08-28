@@ -175,7 +175,7 @@ def main(cfg: DictConfig):
         callbacks=callbacks,
         # To resume from checkpoints in save_folder
         autoresume=cfg.get("autoresume", False),
-        run_name='multi-gpu-test-E55s6t '
+        reset_time=cfg.get("reset_time", False),
     )
     # Start training
     trainer.fit()

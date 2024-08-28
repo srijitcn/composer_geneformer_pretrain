@@ -61,7 +61,7 @@ token_dictionary_filename : token_dictionary.pkl
 streaming_dataset_location : streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
 # Batching
-max_duration: 10ep
+max_duration: 20ep
 train_batch_size: 16
 eval_batch_size: 16
 device_train_microbatch_size : 16
@@ -76,6 +76,7 @@ console_log_interval: 1ba
 eval_interval: 2ep
 #Checkpoint to remote object store
 autoresume: True
+reset_time: False
 save_overwrite: True
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
