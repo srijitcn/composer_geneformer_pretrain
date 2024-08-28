@@ -54,7 +54,7 @@ def main(cfg: DictConfig):
     model_state_dict = torch.load(local_weights_file)
     print(model_state_dict)
 
-    st_dict = { k.replace("model.",""):v  for k,v in model_state_dict["state"]["model"]}
+    st_dict = { k.replace("model.",""):v  for k,v in model_state_dict["state"]["model"].items()}
 
     ### Load model
     print("Loading model")
