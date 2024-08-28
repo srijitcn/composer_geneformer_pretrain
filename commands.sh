@@ -1,16 +1,16 @@
 # Setup
-apt-get update
-apt-get install unzip nano -y
+apt-get -y -qq update
+apt-get -y -q install unzip nano
 
 echo ">>> Configuring aws"
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
+unzip -q awscliv2.zip
+sh ./aws/install
 aws s3 ls s3://srijit-nair-sandbox-bucket/geneformer/data
 
 echo ">>> Installing Geneformer"
 cd /composer_geneformer_pretrain
-sh geneformer_prep.sh 
+sh ./geneformer_prep.sh
 
 echo ">>> Installing dependencies"
 pip install -q -r requirements.txt
