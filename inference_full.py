@@ -59,7 +59,7 @@ def main(cfg: DictConfig):
     model_config = build_model_config(cfg,token_dictionary)
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
-    model.load_state_dict(model_state_dict["state"])
+    model.load_state_dict(model_state_dict["state"]["model"])
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
     
     ##Run inference
