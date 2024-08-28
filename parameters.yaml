@@ -60,15 +60,15 @@ data_bucket_key : geneformer/data
 token_dictionary_filename : token_dictionary.pkl
 streaming_dataset_location : streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
-max_duration: 3ep
+
 # Training
 train_batch_size: 16
 eval_batch_size: 16
 device_train_microbatch_size : 16
 train_subset_num_batches : 100
 eval_subset_num_batches : 10
-max_duration: 10ep
-eval_interval: 5ep
+max_duration: 3ep
+eval_interval: 2ep
 # Logging
 progress_bar: true
 log_to_console: true
