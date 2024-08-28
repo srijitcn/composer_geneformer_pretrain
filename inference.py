@@ -21,7 +21,7 @@ from streaming import MDSWriter, StreamingDataset
 def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
-    checkpoint_path = cfg.save_folder
+    checkpoint_path = f"{cfg.save_folder}/ep10-ba10000"
     data_bucket_name = cfg.data_bucket_name
     data_bucket_key = cfg.data_bucket_key
     token_dictionary_filename = cfg.token_dictionary_filename
