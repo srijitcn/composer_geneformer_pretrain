@@ -175,10 +175,9 @@ def main(cfg: DictConfig):
         callbacks=callbacks,
         # To resume from checkpoints in save_folder
         autoresume=cfg.get("autoresume", False),
-        reset_time=cfg.get("reset_time", False),
     )
     # Start training
-    trainer.fit()
+    trainer.fit(reset_time=cfg.get("reset_time", False))
 
     print(trainer.state.train_metrics)
     print(trainer.state.eval_metrics)
