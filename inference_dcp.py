@@ -13,6 +13,7 @@ from geneformer.pretrainer import GeneformerPreCollator
 import torch
 import torch.distributed.checkpoint as dcp
 from torch.utils.data import DataLoader
+from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 from composer.utils.dist import initialize_dist
 from composer.utils.checkpoint import DistCPObjectStoreReader
@@ -58,7 +59,7 @@ def main(cfg: DictConfig):
     
     st_dict = { f"model.{k}":v  for k,v in model_state_dict.items()}
     
-    dcp.load(
+    dcp.load_state_dict(
         state_dict=st_dict,
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_prefix, 
@@ -71,7 +72,7 @@ def main(cfg: DictConfig):
     )
 
     #unnecessary plumbing work...argh
-    st_dict = { k.replace("state.model.",""):v  for k,v in model_state_dict.items()}
+    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="model.")
     model.load_state_dict(st_dict)
 
     ##Run inference
