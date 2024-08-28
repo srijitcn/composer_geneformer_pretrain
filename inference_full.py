@@ -97,6 +97,7 @@ def main(cfg: DictConfig):
     ]
     mlflow_logger = loggers[0]
     mlflow_logger.log_model(
+        flavor = "transformers",
         transformers_model={
             "model":model,
             "tokenizer":tokenizer
