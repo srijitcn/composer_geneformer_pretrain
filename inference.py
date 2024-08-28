@@ -14,6 +14,7 @@ import torch
 from torch.distributed.checkpoint import state_dict_loader
 from torch.utils.data import DataLoader
 
+from composer.utils.dist import initialize_dist
 from composer.utils.checkpoint import DistCPObjectStoreReader
 from composer.utils import S3ObjectStore
 
@@ -38,6 +39,9 @@ def main(cfg: DictConfig):
     # Read the token dictionary file
     s3 = boto3.resource('s3')
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
+
+    ##Initialize dist
+    initialize_dist()
 
     ### Load model
     print("Loading model")
