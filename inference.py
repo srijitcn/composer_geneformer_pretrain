@@ -15,7 +15,7 @@ from torch.distributed.checkpoint import state_dict_loader
 from torch.utils.data import DataLoader
 
 from composer.utils.checkpoint import DistCPObjectStoreReader
-
+from composer.utils import S3ObjectStore
 
 from streaming import MDSWriter, StreamingDataset
 
@@ -23,6 +23,8 @@ def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
     checkpoint_path = f"{cfg.save_folder}/ep10-ba10000"
+    checkpoint_prefix = '/'.join(checkpoint_path.replace("s3://","").split('/')[1:])
+
     local_checkpoint_path = f"{working_dir}/checkpoint"
     data_bucket_name = cfg.data_bucket_name
     data_bucket_key = cfg.data_bucket_key
@@ -52,7 +54,14 @@ def main(cfg: DictConfig):
     }
     state_dict_loader.load(
         state_dict=state_dict,
-        storage_reader= DistCPObjectStoreReader(source_path=checkpoint_path, destination_path=local_checkpoint_path)
+        storage_reader= DistCPObjectStoreReader(
+            source_path=checkpoint_path, 
+            destination_path=local_checkpoint_path,
+            object_store=S3ObjectStore(
+                bucket = data_bucket_name,
+                prefix = checkpoint_prefix
+            )
+        )
     )
     model.load_state_dict(state_dict["model"])
 
