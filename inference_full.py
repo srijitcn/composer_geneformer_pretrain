@@ -101,7 +101,7 @@ def main(cfg: DictConfig):
                 "model":model,
                 "tokenizer":tokenizer
             },
-            task = "mlm"
+            task = "mlm",
             artifact_path="model",
     )
 
