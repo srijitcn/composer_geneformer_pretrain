@@ -21,6 +21,8 @@ from composer.utils import S3ObjectStore
 
 from streaming import MDSWriter, StreamingDataset
 
+import mlflow
+
 def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
@@ -88,7 +90,18 @@ def main(cfg: DictConfig):
     print("Result")
     print(result)
 
-    
+    loggers = [
+        build_logger(name, logger_cfg) for name, logger_cfg in cfg.get('loggers', {}).items() if name=="mlflow"
+    ]
+    mlflow_logger = loggers[0]
+    mlflow_logger.log_model(
+        transformers_model={
+            "model":model,
+            "tokenizer":tokenizer
+        },
+        artifact_path="model",
+    )
+
 
 
 if __name__ == '__main__':
