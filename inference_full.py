@@ -41,14 +41,6 @@ def main(cfg: DictConfig):
     s3 = boto3.resource('s3')
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
 
-    ### Load model
-    print("Loading model")
-    model_config = build_model_config(cfg,token_dictionary)
-
-    config = BertConfig(**model_config)
-    model = BertForMaskedLM(config)
-    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-    
     ##load model weights
     print("Loading weights")
     #copy weight to local folder
@@ -59,8 +51,14 @@ def main(cfg: DictConfig):
         for chunk in iter(lambda: weight_content.read(4096), b''):
             f.write(chunk)
 
-    model.load_state_dict(torch.load(local_weights_file))
-
+    model_state_dict = torch.load(local_weights_file)
+    ### Load model
+    print("Loading model")
+    model_config = build_model_config(cfg,token_dictionary)
+    config = BertConfig(**model_config)
+    model = BertForMaskedLM(config=config, state_dict=model_state_dict)
+    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
+    
     ##Run inference
     print("Getting test data")
     streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
