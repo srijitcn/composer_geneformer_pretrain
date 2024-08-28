@@ -92,19 +92,15 @@ def main(cfg: DictConfig):
     print(result)
 
     print("Log the model to mlflow")
-    loggers = [
-        build_logger(name, logger_cfg) for name, logger_cfg in cfg.get('loggers', {}).items() if name=="mlflow"
-    ]
-    mlflow_logger = loggers[0]
-    mlflow_logger.log_model(
-        flavor = "transformers",
-        transformers_model={
+    experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
+    experiment = mlflow.set_experiment(experiment_base_path)
+    with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
+        mlflow.transformers.log_model({
             "model":model,
             "tokenizer":tokenizer
         },
         artifact_path="model",
     )
-
 
 
 if __name__ == '__main__':
