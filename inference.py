@@ -41,7 +41,7 @@ def main(cfg: DictConfig):
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
 
     ##Initialize dist
-    initialize_dist()
+    initialize_dist(device="gpu")
 
     ### Load model
     print("Loading model")
