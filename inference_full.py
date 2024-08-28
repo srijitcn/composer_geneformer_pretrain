@@ -23,7 +23,7 @@ from streaming import MDSWriter, StreamingDataset
 def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
-    checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full" #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
+    checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full/ep10-ba10000-rank0.pt" #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
     checkpoint_prefix = '/'.join(checkpoint_file.replace("s3://","").split('/')[1:])
     
     local_checkpoint_path = f"{working_dir}/checkpoint"
