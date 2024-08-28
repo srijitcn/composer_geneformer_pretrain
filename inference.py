@@ -11,7 +11,7 @@ import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
 
 import torch
-from torch.distributed.checkpoint import state_dict_loader
+import torch.distributed.checkpoint as dcp
 from torch.utils.data import DataLoader
 
 from composer.utils.dist import initialize_dist
@@ -56,7 +56,7 @@ def main(cfg: DictConfig):
     state_dict = {
         "model": model.state_dict()
     }
-    state_dict_loader.load(
+    dcp.load(
         state_dict=state_dict,
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_prefix, 
@@ -64,8 +64,7 @@ def main(cfg: DictConfig):
             device_mesh = None,
             object_store=S3ObjectStore(
                 bucket = data_bucket_name
-            )
-            
+            )            
         )
     )
     model.load_state_dict(state_dict["model"])
