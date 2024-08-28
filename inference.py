@@ -57,6 +57,7 @@ def main(cfg: DictConfig):
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_path, 
             destination_path=local_checkpoint_path,
+            device_mesh = None,
             object_store=S3ObjectStore(
                 bucket = data_bucket_name,
                 prefix = checkpoint_prefix
