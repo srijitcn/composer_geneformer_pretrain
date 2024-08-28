@@ -60,20 +60,19 @@ data_bucket_key : geneformer/data
 token_dictionary_filename : token_dictionary.pkl
 streaming_dataset_location : streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
-# Batching
-max_duration: 10ep
+# Training 
 train_batch_size: 16
 eval_batch_size: 16
 device_train_microbatch_size : 16
-
-train_subset_num_batches : 1000
-eval_subset_num_batches : 100
-
+train_subset_num_batches : 100
+eval_subset_num_batches : 10
+max_duration: 10ep
+eval_interval: 5ep
 # Logging
 progress_bar: false
 log_to_console: true
 console_log_interval: 1ba
-eval_interval: 2ep
+
 #Checkpoint to remote object store
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
