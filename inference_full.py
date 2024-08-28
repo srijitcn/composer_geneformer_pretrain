@@ -55,10 +55,10 @@ def main(cfg: DictConfig):
         for chunk in iter(lambda: weight_content.read(4096), b''):
             f.write(chunk)
 
-    model_state_dict = torch.load(local_weights_file)
+    model_state_dict = torch.load(local_weights_file)["state"]["model"]
 
     #removing prefix from huggingface model
-    consume_prefix_in_state_dict_if_present(model_state_dict["state"]["model"], prefix="model.")
+    consume_prefix_in_state_dict_if_present(model_state_dict, prefix="model.")
 
     ### Load model
     print("Loading model")
