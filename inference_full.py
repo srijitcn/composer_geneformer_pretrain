@@ -56,14 +56,14 @@ def main(cfg: DictConfig):
     model_state_dict = torch.load(local_weights_file)
 
     #removing prefix from huggingface model
-    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="state.model.model.")
+    consume_prefix_in_state_dict_if_present(model_state_dict, prefix="state.model.model.")
 
     ### Load model
     print("Loading model")
     model_config = build_model_config(cfg,token_dictionary)
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
-    model.load_state_dict(st_dict)
+    model.load_state_dict(model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
     
     ##Run inference
@@ -84,13 +84,11 @@ def main(cfg: DictConfig):
     test_data = next(iter(eval_dataloader))
 
     print(f"Test data: {test_data}")
-
+    
     result = model(test_data["input_ids"])
     
-    print("result")
+    print("Result")
     print(result)
-    print("Labels")
-    print(test_data["labels"])
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]

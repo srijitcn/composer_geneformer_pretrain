@@ -56,9 +56,6 @@ def main(cfg: DictConfig):
     ##load model weights
     print("Loading weights")    
     model_state_dict = model.state_dict()
-    #st_dict = {
-    #    "model" : model_state_dict
-    #}
     st_dict = { f"state.model.model.{k}":v  for k,v in model_state_dict.items()}
     
     dcp.load(
@@ -93,7 +90,13 @@ def main(cfg: DictConfig):
     
     
     test_data = next(iter(eval_dataloader))
+
     print(f"Test data: {test_data}")
+
+    result = model(test_data["input_ids"])
+    
+    print("Result")
+    print(result)
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
