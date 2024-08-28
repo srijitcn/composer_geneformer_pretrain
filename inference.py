@@ -14,6 +14,7 @@ import torch
 import torch.distributed._shard.checkpoint as dist_cp
 from torch.utils.data import DataLoader
 
+from composer.utils.checkpoint import load_checkpoint
  
 
 from streaming import MDSWriter, StreamingDataset
@@ -48,12 +49,15 @@ def main(cfg: DictConfig):
     state_dict = {
         "model": model.state_dict()
     }
-    dist_cp.load_state_dict(
-        state_dict=state_dict,
-        storage_reader= dist_cp.FileSystemReader(checkpoint_path),
-        no_dist=True,
-    )
-    model.load_state_dict(state_dict["model"])
+    
+    #dist_cp.load_state_dict(
+    #    state_dict=state_dict,
+    #    storage_reader= dist_cp.FileSystemReader(checkpoint_path),
+    #    no_dist=True,
+    #)
+    #model.load_state_dict(state_dict["model"])
+
+    load_checkpoint(checkpoint_path, state_dict, None)
 
 
     ##Run inference
