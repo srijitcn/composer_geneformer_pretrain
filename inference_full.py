@@ -4,7 +4,7 @@ from cfgutils import *
 
 import boto3
 import pickle
-
+import os
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
 import geneformer
@@ -21,13 +21,16 @@ from composer.utils import S3ObjectStore
 
 from streaming import MDSWriter, StreamingDataset
 
+import mlflow
+
 def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
-    checkpoint_path = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints/ep10-ba10000" #f"{cfg.save_folder}/ep10-ba10000"
-    checkpoint_prefix = '/'.join(checkpoint_path.replace("s3://","").split('/')[1:])
-
+    checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full/ep10-ba10000-rank0.pt" #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
+    checkpoint_prefix = '/'.join(checkpoint_file.replace("s3://","").split('/')[1:])
+    
     local_checkpoint_path = f"{working_dir}/checkpoint"
+    local_weights_file = f"{local_checkpoint_path}/weights.pt"
     data_bucket_name = cfg.data_bucket_name
     data_bucket_key = cfg.data_bucket_key
     token_dictionary_filename = cfg.token_dictionary_filename
@@ -42,38 +45,29 @@ def main(cfg: DictConfig):
     s3 = boto3.resource('s3')
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
 
-    ##Initialize dist
-    initialize_dist(device="gpu")
+    ##load model weights
+    print("Loading weights")
+    #copy weight to local folder
+    os.makedirs(local_checkpoint_path,exist_ok=True)
+
+    weight_content = s3.Bucket(data_bucket_name).Object(checkpoint_prefix).get()["Body"]
+    with open(local_weights_file, 'wb') as f:
+        for chunk in iter(lambda: weight_content.read(4096), b''):
+            f.write(chunk)
+
+    model_state_dict = torch.load(local_weights_file)["state"]["model"]
+
+    #removing prefix from huggingface model
+    consume_prefix_in_state_dict_if_present(model_state_dict, prefix="model.")
 
     ### Load model
     print("Loading model")
     model_config = build_model_config(cfg,token_dictionary)
-
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
-    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
+    model.load_state_dict(model_state_dict)
+    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
     
-    ##load model weights
-    print("Loading weights")    
-    model_state_dict = model.state_dict()
-    st_dict = { f"state.model.model.{k}":v  for k,v in model_state_dict.items()}
-    
-    dcp.load(
-        state_dict=st_dict,
-        storage_reader= DistCPObjectStoreReader(
-            source_path=checkpoint_prefix, 
-            destination_path=local_checkpoint_path,
-            device_mesh = None,
-            object_store=S3ObjectStore(
-                bucket = data_bucket_name
-            )            
-        )
-    )
-
-    #unnecessary plumbing work...argh
-    consume_prefix_in_state_dict_if_present(st_dict, prefix="state.model.model.")
-    model.load_state_dict(st_dict)
-
     ##Run inference
     print("Getting test data")
     streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
@@ -90,11 +84,27 @@ def main(cfg: DictConfig):
     
     
     test_data = next(iter(eval_dataloader))
-
+    
+    print("Perform inference")
     result = model(test_data["input_ids"])
     
     print("Result")
     print(result)
+
+    print("Log the model to mlflow")
+    mlflow.set_registry_uri("databricks")
+    experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
+    experiment = mlflow.set_experiment(experiment_base_path)
+    with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
+        mlflow.transformers.log_model(
+            transformers_model={
+                "model":model,
+                "tokenizer":tokenizer
+            },
+            task = "mlm",
+            artifact_path="model",
+    )
+
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
