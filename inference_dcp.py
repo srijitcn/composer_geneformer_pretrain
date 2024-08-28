@@ -72,7 +72,7 @@ def main(cfg: DictConfig):
     )
 
      #unnecessary plumbing work...argh
-    st_dict = { k.replace("state.model",""):v  for k,v in model_state_dict.items()}
+    st_dict = { k.replace("state.model.",""):v  for k,v in model_state_dict.items()}
     model.load_state_dict(st_dict)
 
 
