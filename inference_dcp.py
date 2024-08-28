@@ -56,8 +56,12 @@ def main(cfg: DictConfig):
     ##load model weights
     print("Loading weights")    
     model_state_dict = model.state_dict()
-    
+    #st_dict = {
+    #    "model" : model_state_dict
+    #}
     st_dict = { f"model.{k}":v  for k,v in model_state_dict.items()}
+
+    print(st_dict.keys)
     
     dcp.load_state_dict(
         state_dict=st_dict,
