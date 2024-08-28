@@ -4,7 +4,7 @@ image: mosaicml/pytorch:2.2.2_cu121-python3.11-ubuntu20.04
 integrations:
 - integration_type: git_repo
   git_repo: srijitcn/composer_geneformer_pretrain
-  git_branch: main # use your branch
+  git_branch: yen2 # use your branch
   ssh_clone: true # Should be true if using a private repo
 
 command: |
@@ -12,7 +12,6 @@ command: |
   sh commands.sh
   echo ">>> Starting training"
   composer -n 8 train.py parameters.yaml
-
 
 compute:
   gpus: 8
