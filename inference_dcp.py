@@ -60,12 +60,9 @@ def main(cfg: DictConfig):
     #    "model" : model_state_dict
     #}
     st_dict = { f"model.{k}":v  for k,v in model_state_dict.items()}
-
-    for k in st_dict.keys():
-        print(k)
     
     dcp.load_state_dict(
-        state_dict=st_dict,
+        state_dict={"model":st_dict},
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_prefix, 
             destination_path=local_checkpoint_path,
