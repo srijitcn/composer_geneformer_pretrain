@@ -85,11 +85,13 @@ def main(cfg: DictConfig):
     
     test_data = next(iter(eval_dataloader))
     
+    print("Perform inference")
     result = model(test_data["input_ids"])
     
     print("Result")
     print(result)
 
+    print("Log the model to mlflow")
     loggers = [
         build_logger(name, logger_cfg) for name, logger_cfg in cfg.get('loggers', {}).items() if name=="mlflow"
     ]
