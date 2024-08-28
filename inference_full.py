@@ -56,7 +56,7 @@ def main(cfg: DictConfig):
     model_state_dict = torch.load(local_weights_file)
 
     #removing prefix from huggingface model
-    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="model.")
+    st_dict=consume_prefix_in_state_dict_if_present(model_state_dict, prefix="state.model.model.")
 
     ### Load model
     print("Loading model")
