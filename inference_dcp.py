@@ -57,7 +57,7 @@ def main(cfg: DictConfig):
         "model": model.state_dict()
     }
     dcp.load(
-        state_dict=model.state_dict(),
+        state_dict=state_dict,
         storage_reader= DistCPObjectStoreReader(
             source_path=checkpoint_prefix, 
             destination_path=local_checkpoint_path,
