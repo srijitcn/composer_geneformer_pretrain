@@ -92,6 +92,7 @@ def main(cfg: DictConfig):
     print(result)
 
     print("Log the model to mlflow")
+    mlflow.set_registry_uri("databricks")
     experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
     experiment = mlflow.set_experiment(experiment_base_path)
     with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
