@@ -52,6 +52,8 @@ def main(cfg: DictConfig):
             f.write(chunk)
 
     model_state_dict = torch.load(local_weights_file)
+    print(model_state_dict)
+
     ### Load model
     print("Loading model")
     model_config = build_model_config(cfg,token_dictionary)
