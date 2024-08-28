@@ -80,7 +80,7 @@ reset_time: False
 save_overwrite: False
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
-load_path: "dbfs:/databricks/mlflow-tracking/1513674964105587/61d1868a1a96472891653f9341925047/artifacts/ep20-ba20000/"
+load_path: "dbfs:/databricks/mlflow-tracking/1513674964105587/40e496beff704c78824813be5d24f7b7/artifacts/"
 save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
 #save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full"
 
