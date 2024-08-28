@@ -91,8 +91,6 @@ def main(cfg: DictConfig):
     
     test_data = next(iter(eval_dataloader))
 
-    print(f"Test data: {test_data}")
-
     result = model(test_data["input_ids"])
     
     print("Result")

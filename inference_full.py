@@ -82,13 +82,14 @@ def main(cfg: DictConfig):
     
     
     test_data = next(iter(eval_dataloader))
-
-    print(f"Test data: {test_data}")
     
     result = model(test_data["input_ids"])
     
     print("Result")
     print(result)
+
+    
+
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
