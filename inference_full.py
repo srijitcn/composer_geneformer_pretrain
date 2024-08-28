@@ -51,7 +51,7 @@ def main(cfg: DictConfig):
         for chunk in iter(lambda: weight_content.read(4096), b''):
             f.write(chunk)
 
-    model_state_dict = torch.load(local_weights_file)
+    model_state_dict = torch.load(local_weights_file,strict=False)
     print(model_state_dict)
 
     ### Load model
@@ -59,7 +59,7 @@ def main(cfg: DictConfig):
     model_config = build_model_config(cfg,token_dictionary)
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
-    model.load_state_dict(dict(model_state_dict["state"]["model"]))
+    model.load_state_dict(model_state_dict["state"]["model"])
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
     
     ##Run inference
