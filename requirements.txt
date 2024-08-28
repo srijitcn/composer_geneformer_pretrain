@@ -1,6 +1,6 @@
 mosaicml==0.23.5
 mosaicml-streaming==0.8.0
-transformers==4.44.0
+transformers==4.42.0
 datasets==2.21.0
 triton
 boto3

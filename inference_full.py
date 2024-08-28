@@ -24,11 +24,13 @@ from streaming import MDSWriter, StreamingDataset
 import mlflow
 
 def main(cfg: DictConfig):
+    #os.environ["MASTER_ADDR"] = "127.0.0.1"
+
     #load the model back and run some test
     working_dir = cfg.working_dir
     checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full/ep10-ba10000-rank0.pt" #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
     checkpoint_prefix = '/'.join(checkpoint_file.replace("s3://","").split('/')[1:])
-    
+
     local_checkpoint_path = f"{working_dir}/checkpoint"
     local_weights_file = f"{local_checkpoint_path}/weights.pt"
     data_bucket_name = cfg.data_bucket_name
@@ -38,7 +40,7 @@ def main(cfg: DictConfig):
     streaming_dataset_location = cfg.streaming_dataset_location
 
     remote_streaming_dataset_location = f"{remote_data_dir}/{streaming_dataset_location}"
-    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"    
+    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
     mlm_probability = cfg.mlm_probability
     eval_batch_size = cfg.eval_batch_size
     # Read the token dictionary file
@@ -66,30 +68,30 @@ def main(cfg: DictConfig):
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
-    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
+    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
     
     ##Run inference
-    print("Getting test data")
-    streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, 
-        mlm=True, 
-        mlm_probability=mlm_probability
-    )
-
-    eval_dataloader = DataLoader(streaming_dataset_eval,
-                            shuffle=False, 
-                            drop_last=False, 
-                            collate_fn=data_collator)
-    
-    
-    test_data = next(iter(eval_dataloader))
-    
-    print("Perform inference")
-    result = model(test_data["input_ids"])
-    
-    print("Result")
-    print(result)
+    # print("Getting test data")
+    # streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    # data_collator = DataCollatorForLanguageModeling(
+    #     tokenizer=tokenizer,
+    #     mlm=True,
+    #     mlm_probability=mlm_probability
+    # )
+    #
+    # eval_dataloader = DataLoader(streaming_dataset_eval,
+    #                         shuffle=False,
+    #                         drop_last=False,
+    #                         collate_fn=data_collator)
+    #
+    #
+    # test_data = next(iter(eval_dataloader))
+    #
+    # print("Perform inference")
+    # result = model(test_data["input_ids"])
+    #
+    # print("Result")
+    # print(result)
 
     print("Log the model to mlflow")
     mlflow.set_registry_uri("databricks")
@@ -101,10 +103,9 @@ def main(cfg: DictConfig):
                 "model":model,
                 "tokenizer":tokenizer
             },
-            task = "mlm",
+            task = "fill-mask",
             artifact_path="model",
     )
-
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
