@@ -1,1 +1,71 @@
-checkpoint_path = "/composer_output/output/runs/geneformer_30M_L6_emb256_SL2048_E3_B12/"
+from omegaconf import DictConfig
+
+from cfgutils import *
+
+import boto3
+import pickle
+
+from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
+
+import geneformer
+from geneformer.pretrainer import GeneformerPreCollator
+
+import torch
+import torch.distributed._shard.checkpoint as dist_cp
+from torch.utils.data import DataLoader
+
+ 
+
+from streaming import MDSWriter, StreamingDataset
+
+def main(cfg: DictConfig):
+    #load the model back and run some test
+    working_dir = cfg.working_dir
+    checkpoint_path = cfg.save_folder
+    data_bucket_name = cfg.data_bucket_name
+    data_bucket_key = cfg.data_bucket_key
+    token_dictionary_filename = cfg.token_dictionary_filename
+    remote_data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
+    streaming_dataset_location = cfg.streaming_dataset_location
+
+    remote_streaming_dataset_location = f"{remote_data_dir}/{streaming_dataset_location}"
+    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
+    mlm_probability = cfg.mlm_probability
+    # Read the token dictionary file
+    s3 = boto3.resource('s3')
+    token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
+
+    ### Load model
+    model_config = build_model_config(cfg,token_dictionary)
+
+    config = BertConfig(**model_config)
+    model = BertForMaskedLM(config)
+    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
+    
+    ##load model weights
+    state_dict = {
+        "model": model.state_dict()
+    }
+    dist_cp.load_state_dict(
+        state_dict=state_dict,
+        storage_reader= dist_cp.FileSystemReader(checkpoint_path),
+        no_dist=True,
+    )
+    model.load_state_dict(state_dict["model"])
+
+
+    ##Run inference
+    streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer, 
+        mlm=True, 
+        mlm_probability=mlm_probability
+    )
+
+    eval_dataloader = DataLoader(streaming_dataset_eval,
+                            shuffle=False, 
+                            drop_last=False, 
+                            collate_fn=data_collator)
+    
+    test_data = next(iter(eval_dataloader))
+    print(test_data)

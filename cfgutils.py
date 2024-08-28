@@ -19,8 +19,11 @@ from composer.utils import dist, reproducibility
 from omegaconf import DictConfig
 from omegaconf import OmegaConf as om
 
-def build_model_config(cfg:DictConfig):
-    return om.to_container(cfg.get("model_config",{}))
+def build_model_config(cfg:DictConfig, token_dictionary:dict):
+    model_config = om.to_container(cfg.get("model_config",{}))
+    model_config["pad_token_id"] = token_dictionary.get("<pad>")
+    model_config["vocab_size"] = len(token_dictionary)
+    return model_config
 
 def log_config(cfg: DictConfig):
     print(om.to_yaml(cfg))

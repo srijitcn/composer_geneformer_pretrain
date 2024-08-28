@@ -18,8 +18,6 @@ import boto3
 
 import torch
 from torch.utils.data import DataLoader
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import LinearLR
 
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
@@ -30,7 +28,7 @@ from composer.models.huggingface import HuggingFaceModel
 from composer.utils import reproducibility
 from composer import Trainer
 
-from streaming import MDSWriter, StreamingDataset
+from streaming import StreamingDataset
 
 from omegaconf import DictConfig
 
@@ -97,9 +95,7 @@ def main(cfg: DictConfig):
     token_dictionary = pickle.loads(s3.Bucket(data_bucket_name).Object(f"{data_bucket_key}/{token_dictionary_filename}").get()['Body'].read())
 
     ### Load model
-    model_config = build_model_config(cfg)
-    model_config["pad_token_id"] = token_dictionary.get("<pad>")
-    model_config["vocab_size"] = len(token_dictionary)
+    model_config = build_model_config(cfg,token_dictionary)
 
     print("=============================")
     print(model_config)
@@ -179,7 +175,7 @@ def main(cfg: DictConfig):
     print(trainer.state.train_metrics)
     print(trainer.state.eval_metrics)
 
-    #load the model back and run some test
+
 
     print("*************Done")
 
