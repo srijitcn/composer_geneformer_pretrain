@@ -58,11 +58,10 @@ def main(cfg: DictConfig):
             source_path=checkpoint_path, 
             destination_path=local_checkpoint_path,
             device_mesh = None,
-            #object_store=S3ObjectStore(
-            #    bucket = data_bucket_name,
-            #    prefix = checkpoint_prefix
-            #)
-            object_store=None
+            object_store=S3ObjectStore(
+                bucket = data_bucket_name
+            )
+            
         )
     )
     model.load_state_dict(state_dict["model"])
