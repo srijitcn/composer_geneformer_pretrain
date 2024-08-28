@@ -55,7 +55,7 @@ def main(cfg: DictConfig):
     state_dict_loader.load(
         state_dict=state_dict,
         storage_reader= DistCPObjectStoreReader(
-            source_path=checkpoint_path, 
+            source_path=checkpoint_prefix, 
             destination_path=local_checkpoint_path,
             device_mesh = None,
             object_store=S3ObjectStore(
