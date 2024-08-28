@@ -166,7 +166,7 @@ def main(cfg: DictConfig):
         train_subset_num_batches=cfg.get("train_subset_num_batches", -1),
         eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
         save_overwrite=cfg.get("save_overwrite", False),
-        #load_path=cfg.get("load_path", None),
+        load_path=cfg.get("load_path", None),
         #load_weights_only=cfg.get("load_weights_only", False),
         python_log_level=cfg.get("python_log_level", None),
         seed=seed_val,        
