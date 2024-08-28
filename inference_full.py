@@ -52,8 +52,8 @@ def main(cfg: DictConfig):
     ##load model weights
     print("Loading weights")
     #copy weight to local folder
-    os.makedirs(local_checkpoint_path)
-    
+    os.makedirs(local_checkpoint_path,exist_ok=True)
+
     weight_content = s3.Bucket(data_bucket_name).Object(checkpoint_prefix).get()["Body"]
     with open(local_weights_file, 'wb') as f:
         for chunk in iter(lambda: weight_content.read(4096), b''):
