@@ -70,16 +70,17 @@ train_subset_num_batches : 1000
 eval_subset_num_batches : 100
 
 # Logging
-progress_bar: false
+progress_bar: true
 log_to_console: true
 console_log_interval: 1ba
 eval_interval: 2ep
 #Checkpoint to remote object store
-autoresume: False #loads from
+autoresume: False #loads from save_folder instead of load_path
 reset_time: False
-save_overwrite: True
+save_overwrite: False
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
 load_path: "dbfs:/databricks/mlflow-tracking/1513674964105587/61d1868a1a96472891653f9341925047/artifacts/ep20-ba20000/"
 save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
 #save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full"
+

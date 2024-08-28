@@ -14,7 +14,6 @@ command: |
   echo ">>> Starting training"
   composer -n 8 train.py parameters.yaml
 
-
 compute:
   gpus: 8
   cluster: r8z11
