@@ -96,11 +96,12 @@ def main(cfg: DictConfig):
     experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
     experiment = mlflow.set_experiment(experiment_base_path)
     with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
-        mlflow.transformers.log_model({
-            "model":model,
-            "tokenizer":tokenizer
-        },
-        artifact_path="model",
+        mlflow.transformers.log_model(
+            transformers_model={
+                "model":model,
+                "tokenizer":tokenizer
+            },
+            artifact_path="model",
     )
 
 
