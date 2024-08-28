@@ -40,6 +40,8 @@ from cfgutils import *
 def main(cfg: DictConfig):
     #### Env variables
     #os.environ["NCCL_DEBUG"] = "INFO"
+    #os.environ["OMPI_MCA_opal_cuda_support"] = "true"
+    #os.environ["CONDA_OVERRIDE_GLIBC"] = "2.56"
 
     seed_val = cfg.seed_val
     random.seed(seed_val)
@@ -160,6 +162,7 @@ def main(cfg: DictConfig):
         train_subset_num_batches=cfg.get("train_subset_num_batches", -1),
         eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
         save_overwrite=cfg.get("save_overwrite", False),
+        # TODO: why does load_path error
         #load_path=cfg.get("load_path", None),
         #load_weights_only=cfg.get("load_weights_only", False),
         python_log_level=cfg.get("python_log_level", None),
@@ -167,10 +170,11 @@ def main(cfg: DictConfig):
         fsdp_config = cfg.get("fsdp_config", None),
         loggers=loggers,
         callbacks=callbacks,
-
+        # To resume from checkpoints in save_folder
+        autoresume=cfg.get("autoresume", False),
     )
     # Start training
-    trainer.fit()
+    trainer.fit(reset_time=cfg.get("reset_time", False))
 
     print(trainer.state.train_metrics)
     print(trainer.state.eval_metrics)

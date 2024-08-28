@@ -45,7 +45,7 @@ callbacks:
 loggers:
   mlflow:
     tracking_uri: databricks
-    experiment_name: mlflow_experiments/geneformer_pretraining
+    experiment_name: /Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining
 
 device : gpu
 seed_val : 42
@@ -60,7 +60,8 @@ data_bucket_key : geneformer/data
 token_dictionary_filename : token_dictionary.pkl
 streaming_dataset_location : streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
-# Training 
+max_duration: 3ep
+# Training
 train_batch_size: 16
 eval_batch_size: 16
 device_train_microbatch_size : 16
@@ -69,12 +70,17 @@ eval_subset_num_batches : 10
 max_duration: 10ep
 eval_interval: 5ep
 # Logging
-progress_bar: false
+progress_bar: true
 log_to_console: true
 console_log_interval: 1ba
 
 #Checkpoint to remote object store
-save_interval: 5ep
+autoresume: False #loads from save_folder instead of load_path
+reset_time: False
+save_overwrite: False
+save_interval: 2ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
-#save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
-save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full"
+load_path: "dbfs:/databricks/mlflow-tracking/1513674964105587/40e496beff704c78824813be5d24f7b7/artifacts/"
+save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
+#save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full"
+
