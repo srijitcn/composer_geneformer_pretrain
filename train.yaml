@@ -11,6 +11,7 @@ command: |
   cd composer_geneformer_pretrain
   sh commands.sh
   echo ">>> Starting training"
+  export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
   composer train.py parameters.yaml
 
 
