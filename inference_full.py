@@ -91,21 +91,6 @@ def main(cfg: DictConfig):
     print("Result")
     print(result)
 
-    print("Log the model to mlflow")
-    mlflow.set_registry_uri("databricks")
-    experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
-    experiment = mlflow.set_experiment(experiment_base_path)
-    with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
-        mlflow.transformers.log_model(
-            transformers_model={
-                "model":model,
-                "tokenizer":tokenizer
-            },
-            task = "mlm",
-            artifact_path="model",
-    )
-
-
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
     with open(yaml_path) as f:
