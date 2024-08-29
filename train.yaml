@@ -11,9 +11,9 @@ command: |
   cd composer_geneformer_pretrain
   sh commands.sh
   echo ">>> Starting training"
-  composer --nproc 8 --world_size 16 train.py parameters.yaml
+  composer -n 16 train.py parameters.yaml
 
 
 compute:
-  gpus: 8
+  gpus: 16
   cluster: r8z11
