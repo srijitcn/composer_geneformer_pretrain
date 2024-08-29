@@ -3,7 +3,7 @@ cd /composer_geneformer_pretrain
 sh geneformer_prep.sh 
 
 echo ">>> Installing dependencies"
-pip install -q -r requirements.txt
+pip install -r requirements.txt
 
 #create working dirrectory
 mkdir -p /pretrain/temp
