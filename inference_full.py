@@ -69,7 +69,10 @@ def main(cfg: DictConfig):
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-    
+
+    # Force save tokenizer to create save_pretrained attributed required for mlflow log_model
+    tokenizer.save_pretrained('/tmp/tokenizer')
+
     ##Run inference
     # print("Getting test data")
     # streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
