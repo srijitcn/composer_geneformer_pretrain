@@ -9,6 +9,7 @@ from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageMod
 
 import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
+from transformers import pipeline, PreTrainedTokenizerBase
 
 import torch
 import torch.distributed.checkpoint as dcp
@@ -22,6 +23,19 @@ from composer.utils import S3ObjectStore
 from streaming import MDSWriter, StreamingDataset
 
 import mlflow
+
+class NewTokenizer(GeneformerPreCollator):
+    def __init__(self, tokenizer, *args, **kwargs):
+        self.tokenizer = tokenizer
+        self.token_dictionary = tokenizer.token_dictionary
+        self._pad_token = tokenizer.pad_token
+        self._mask_token = tokenizer.mask_token
+    def save_pretrained(self, tokenizer):
+        pass
+    # def __len__(self):
+    #     return len(self.token_dictionary)
+    # def added_tokens_decoder(self):
+    #     pass
 
 def main(cfg: DictConfig):
     #os.environ["MASTER_ADDR"] = "127.0.0.1"
@@ -69,9 +83,8 @@ def main(cfg: DictConfig):
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-
-    # Force save tokenizer to create save_pretrained attributed required for mlflow log_model
-    tokenizer.save_pretrained('/tmp/tokenizer')
+    wrapped_tokenizer = NewTokenizer(tokenizer)
+    #wrapped_tokenizer = PreTrainedTokenizerBase(tokenizer_object = tokenizer)
 
     ##Run inference
     # print("Getting test data")
@@ -100,13 +113,15 @@ def main(cfg: DictConfig):
     mlflow.set_registry_uri("databricks")
     experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
     experiment = mlflow.set_experiment(experiment_base_path)
+    pipe = pipeline("fill-mask", model=model, tokenizer=wrapped_tokenizer, device=0)
     with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
         mlflow.transformers.log_model(
-            transformers_model={
-                "model":model,
-                "tokenizer":tokenizer
-            },
-            task = "fill-mask",
+            # transformers_model={
+            #     "model":model,
+            #     "tokenizer":wrapped_tokenizer
+            # },
+            # task="fill-mask",
+            transformers_model=pipe,
             artifact_path="model",
     )
 
