@@ -13,7 +13,7 @@ model_config:
 
 fsdp_config:
   sharding_strategy: FULL_SHARD
-  state_dict_type: sharded
+  state_dict_type: full
   cpu_offload: False 
   mixed_precision: DEFAULT
   backward_prefetch: BACKWARD_POST
@@ -77,4 +77,4 @@ console_log_interval: 1ba
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
 #save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
-save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/demo/checkpoints/sharded"
+save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/demo/checkpoints/full"
