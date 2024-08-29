@@ -24,7 +24,7 @@ from streaming import MDSWriter, StreamingDataset
 
 import mlflow
 
-class NewTokenizer(GeneformerPreCollator):
+class GeneformerTransformerTokenizer(GeneformerPreCollator):
     def __init__(self, tokenizer, *args, **kwargs):
         self.tokenizer = tokenizer
         self.token_dictionary = tokenizer.token_dictionary
@@ -83,7 +83,7 @@ def main(cfg: DictConfig):
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-    wrapped_tokenizer = NewTokenizer(tokenizer)
+    wrapped_tokenizer = GeneformerTransformerTokenizer(tokenizer)
     #wrapped_tokenizer = PreTrainedTokenizerBase(tokenizer_object = tokenizer)
 
     ##Run inference
@@ -116,11 +116,6 @@ def main(cfg: DictConfig):
     pipe = pipeline("fill-mask", model=model, tokenizer=wrapped_tokenizer, device=0)
     with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
         mlflow.transformers.log_model(
-            # transformers_model={
-            #     "model":model,
-            #     "tokenizer":wrapped_tokenizer
-            # },
-            # task="fill-mask",
             transformers_model=pipe,
             artifact_path="model",
     )
