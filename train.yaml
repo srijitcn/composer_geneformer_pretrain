@@ -22,4 +22,4 @@ compute:
 #enable watchdog
 scheduling:
   retry_on_system_failure: True
-  max_retries: 10
+  max_retries: 3
