@@ -23,28 +23,15 @@ from composer.utils import S3ObjectStore
 from streaming import MDSWriter, StreamingDataset
 
 import mlflow
+from mlflow.models.signature import infer_signature
 
-# class GeneformerTorch(mlflow.pyfunc.PythonModel):
-#     def __init__(self, config, model, tokenizer):
-#         self.config = config
-#         self.model = model
-#         self.tokenizer = tokenizer
-#     def predict(self, test_data):
-#         return model(test_data["input_ids"])
-#
-# pyfunc_model = GeneformerTorch(config, model, tokenizer)
-# pyfunc_model.predict(test_data)
-#
-# pipe = pipeline("fill-mask", model=model, tokenizer=wrapped_tokenizer, device=0)
-# with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
-#     mlflow.pyfunc.log_model(
-#
-#         artifact_path="model",
-# )
-#
-# run_id = mlflow.active_run().info.run_id
-# loaded_model = mlflow.pyfunc.load_model(f"runs:/{run_id}/model")
-
+class GeneformerTorch(mlflow.pyfunc.PythonModel):
+    def __init__(self, config, model, tokenizer):
+        self.config = config
+        self.model = model
+        self.tokenizer = tokenizer
+    def predict(self, test_data):
+        return self.model(test_data["input_ids"])
 
 def main(cfg: DictConfig):
     #os.environ["MASTER_ADDR"] = "127.0.0.1"
@@ -92,8 +79,7 @@ def main(cfg: DictConfig):
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-#    wrapped_tokenizer = GeneformerTransformerTokenizer(tokenizer)
-#    #wrapped_tokenizer = PreTrainedTokenizerBase(tokenizer_object = tokenizer)
+    pyfunc_model = GeneformerTorch(config, model, tokenizer)
 
     #Run inference
     print("Getting test data")
@@ -110,7 +96,6 @@ def main(cfg: DictConfig):
                             collate_fn=data_collator)
 
     test_data = next(iter(eval_dataloader))
-    print(test_data)
 
     print("Perform inference")
     result = model(test_data["input_ids"])
@@ -118,19 +103,24 @@ def main(cfg: DictConfig):
     print("Result")
     print(result)
 
+    signature = infer_signature(test_data["input_ids"], result)
+
     print("Log the model to mlflow")
-   # mlflow.set_registry_uri("databricks")
     mlflow.set_tracking_uri("databricks")
     experiment_base_path = f"/Users/yen.low@databricks.com/mlflow_experiments/geneformer_pretraining"
     experiment = mlflow.set_experiment(experiment_base_path)
-    pipe = pipeline("fill-mask", model=model, tokenizer=tokenizer, device=0)
-    with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
-        mlflow.transformers.log_model(
-            transformers_model=pipe,
-            artifact_path="model",
-    )
 
-#loaded_model = mlflow.transformers.load_model("runs:/69402db09ec54dd9aad1a96d93305b4b/model")
+    with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
+        mlflow.pyfunc.log_model(
+            python_model=pyfunc_model,
+            artifact_path="model",
+            signature=signature,
+            registered_model_name='geneformer_10ep'
+        )
+    run_id = mlflow_run.info.run_id
+    loaded_model = mlflow.pyfunc.load_model(f"runs:/{run_id}/model")
+    results_mlflow = loaded_model.predict(test_data)
+    print(results_mlflow)
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
