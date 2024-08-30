@@ -27,6 +27,7 @@ from geneformer.pretrainer import GeneformerPreCollator
 from composer.models.huggingface import HuggingFaceModel
 from composer.utils import reproducibility
 from composer import Trainer
+from composer import Callback, Event, Logger, State
 
 from streaming import StreamingDataset
 
@@ -140,6 +141,17 @@ def main(cfg: DictConfig):
                             shuffle=False, 
                             drop_last=False, 
                             collate_fn=data_collator)
+
+    ##############################
+    #Following code is to introduce an error after 7 epochs , to see if we can restart the training from 5th
+
+    class RaiseErrorOnEpoch7(Callback):
+        def run_event(self, event: Event, state: State, logger: Logger):
+            if event == Event.EPOCH_START and state.timestamp.epoch==7:
+                raise Exception("Rescue me!!!!")
+            
+    callbacks.append(RaiseErrorOnEpoch7())
+    ##############################
 
     # Create Trainer Object
     trainer = Trainer(
