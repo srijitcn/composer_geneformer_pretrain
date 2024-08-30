@@ -30,11 +30,13 @@ class GeneformerTorch(mlflow.pyfunc.PythonModel):
         self.config = config
         self.model = model
         self.tokenizer = tokenizer
-    def predict(self, test_data):
+    def predict(self, context, test_data):
         return self.model(test_data["input_ids"])
 
 def main(cfg: DictConfig):
-    #os.environ["MASTER_ADDR"] = "127.0.0.1"
+    #If single GPU
+    os.environ["MASTER_ADDR"] = "127.0.0.1"
+    os.environ["MASTER_PORT"] = "12345"
 
     #load the model back and run some test
     working_dir = cfg.working_dir
@@ -83,7 +85,11 @@ def main(cfg: DictConfig):
 
     #Run inference
     print("Getting test data")
-    streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_cache_location}/test1",
+                                            remote=f"{remote_streaming_dataset_location}/test",
+                                            download_retry=1,
+                                            batch_size=eval_batch_size)
+
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
         mlm=True,
@@ -96,16 +102,18 @@ def main(cfg: DictConfig):
                             collate_fn=data_collator)
 
     test_data = next(iter(eval_dataloader))
+    #torch.Size([1, 388])
 
     print("Perform inference")
     result = model(test_data["input_ids"])
 
-    print("Result")
+    print("Result from torch load model")
     print(result)
 
 #    signature = infer_signature(test_data["input_ids"], result)
 
     print("Log the model to mlflow")
+    mlflow.set_registry_uri("databricks")
     mlflow.set_tracking_uri("databricks")
     experiment_base_path = f"/Users/yen.low@databricks.com/mlflow_experiments/geneformer_pretraining"
     experiment = mlflow.set_experiment(experiment_base_path)
@@ -114,12 +122,13 @@ def main(cfg: DictConfig):
         mlflow.pyfunc.log_model(
             python_model=pyfunc_model,
             artifact_path="model",
-#            signature=signature,
+    #            signature=signature,
             registered_model_name='geneformer_10ep'
         )
     run_id = mlflow_run.info.run_id
     loaded_model = mlflow.pyfunc.load_model(f"runs:/{run_id}/model")
     results_mlflow = loaded_model.predict(test_data)
+    print("Result from mlflow loaded model")
     print(results_mlflow)
 
 if __name__ == '__main__':
