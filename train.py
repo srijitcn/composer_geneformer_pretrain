@@ -144,13 +144,12 @@ def main(cfg: DictConfig):
 
     ##############################
     #Following code is to introduce an error after 7 epochs , to see if we can restart the training from 5th
-
-    class RaiseErrorOnEpoch7(Callback):
-        def run_event(self, event: Event, state: State, logger: Logger):
-            if event == Event.EPOCH_START and state.timestamp.epoch==7:
-                raise Exception("Rescue me!!!!")
-            
-    callbacks.append(RaiseErrorOnEpoch7())
+    #class RaiseErrorOnEpoch7(Callback):
+    #    def run_event(self, event: Event, state: State, logger: Logger):
+    #        if event == Event.EPOCH_START and state.timestamp.epoch==7:
+    #            raise Exception("Rescue me!!!!")
+    #        
+    #callbacks.append(RaiseErrorOnEpoch7())
     ##############################
 
     # Create Trainer Object
