@@ -79,7 +79,7 @@ autoresume : True
 
 #Checkpoint to remote object store
 save_interval: 5ep
-save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK
+save_num_checkpoints_to_keep: 0  # Important, this cleans up checkpoints saved to DISK
 save_overwrite: True #overwrite checkpoint if exists
 #save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
-save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/demo/checkpoints/full"
+save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/demo/restart/checkpoints/full"
