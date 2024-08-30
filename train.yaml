@@ -1,4 +1,4 @@
-name: multi-gpu-test
+name: geneformer-pretrain
 #image: mosaicml/pytorch:2.2.2_cu121-python3.11-ubuntu20.04
 image: mosaicml/composer:latest
 
