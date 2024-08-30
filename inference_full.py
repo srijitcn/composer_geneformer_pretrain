@@ -103,7 +103,7 @@ def main(cfg: DictConfig):
     print("Result")
     print(result)
 
-    signature = infer_signature(test_data["input_ids"], result)
+#    signature = infer_signature(test_data["input_ids"], result)
 
     print("Log the model to mlflow")
     mlflow.set_tracking_uri("databricks")
@@ -114,7 +114,7 @@ def main(cfg: DictConfig):
         mlflow.pyfunc.log_model(
             python_model=pyfunc_model,
             artifact_path="model",
-            signature=signature,
+#            signature=signature,
             registered_model_name='geneformer_10ep'
         )
     run_id = mlflow_run.info.run_id
