@@ -16,5 +16,5 @@ command: |
 
 
 compute:
-  gpus: 16
+  gpus: 8
   cluster: r8z11

@@ -40,6 +40,7 @@ callbacks:
   speed_monitor:
     window_size: 500
   lr_monitor: {}
+  memory_monitor: {}
 
 #make sure you have configured databricks secret
 loggers:
