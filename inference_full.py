@@ -24,18 +24,27 @@ from streaming import MDSWriter, StreamingDataset
 
 import mlflow
 
-class GeneformerTransformerTokenizer(GeneformerPreCollator):
-    def __init__(self, tokenizer, *args, **kwargs):
-        self.tokenizer = tokenizer
-        self.token_dictionary = tokenizer.token_dictionary
-        self._pad_token = tokenizer.pad_token
-        self._mask_token = tokenizer.mask_token
-    def save_pretrained(self, tokenizer):
-        pass
-    # def __len__(self):
-    #     return len(self.token_dictionary)
-    # def added_tokens_decoder(self):
-    #     pass
+# class GeneformerTorch(mlflow.pyfunc.PythonModel):
+#     def __init__(self, config, model, tokenizer):
+#         self.config = config
+#         self.model = model
+#         self.tokenizer = tokenizer
+#     def predict(self, test_data):
+#         return model(test_data["input_ids"])
+#
+# pyfunc_model = GeneformerTorch(config, model, tokenizer)
+# pyfunc_model.predict(test_data)
+#
+# pipe = pipeline("fill-mask", model=model, tokenizer=wrapped_tokenizer, device=0)
+# with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
+#     mlflow.pyfunc.log_model(
+#
+#         artifact_path="model",
+# )
+#
+# run_id = mlflow.active_run().info.run_id
+# loaded_model = mlflow.pyfunc.load_model(f"runs:/{run_id}/model")
+
 
 def main(cfg: DictConfig):
     #os.environ["MASTER_ADDR"] = "127.0.0.1"
@@ -83,42 +92,45 @@ def main(cfg: DictConfig):
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
     tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
-    wrapped_tokenizer = GeneformerTransformerTokenizer(tokenizer)
-    #wrapped_tokenizer = PreTrainedTokenizerBase(tokenizer_object = tokenizer)
+#    wrapped_tokenizer = GeneformerTransformerTokenizer(tokenizer)
+#    #wrapped_tokenizer = PreTrainedTokenizerBase(tokenizer_object = tokenizer)
 
-    ##Run inference
-    # print("Getting test data")
-    # streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
-    # data_collator = DataCollatorForLanguageModeling(
-    #     tokenizer=tokenizer,
-    #     mlm=True,
-    #     mlm_probability=mlm_probability
-    # )
-    #
-    # eval_dataloader = DataLoader(streaming_dataset_eval,
-    #                         shuffle=False,
-    #                         drop_last=False,
-    #                         collate_fn=data_collator)
-    #
-    #
-    # test_data = next(iter(eval_dataloader))
-    #
-    # print("Perform inference")
-    # result = model(test_data["input_ids"])
-    #
-    # print("Result")
-    # print(result)
+    #Run inference
+    print("Getting test data")
+    streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=True,
+        mlm_probability=mlm_probability
+    )
+
+    eval_dataloader = DataLoader(streaming_dataset_eval,
+                            shuffle=False,
+                            drop_last=False,
+                            collate_fn=data_collator)
+
+    test_data = next(iter(eval_dataloader))
+    print(test_data)
+
+    print("Perform inference")
+    result = model(test_data["input_ids"])
+
+    print("Result")
+    print(result)
 
     print("Log the model to mlflow")
-    mlflow.set_registry_uri("databricks")
-    experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
+   # mlflow.set_registry_uri("databricks")
+    mlflow.set_tracking_uri("databricks")
+    experiment_base_path = f"/Users/yen.low@databricks.com/mlflow_experiments/geneformer_pretraining"
     experiment = mlflow.set_experiment(experiment_base_path)
-    pipe = pipeline("fill-mask", model=model, tokenizer=wrapped_tokenizer, device=0)
+    pipe = pipeline("fill-mask", model=model, tokenizer=tokenizer, device=0)
     with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
         mlflow.transformers.log_model(
             transformers_model=pipe,
             artifact_path="model",
     )
+
+#loaded_model = mlflow.transformers.load_model("runs:/69402db09ec54dd9aad1a96d93305b4b/model")
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
