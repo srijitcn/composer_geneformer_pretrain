@@ -156,7 +156,7 @@ def main(cfg: DictConfig):
         device_train_microbatch_size=cfg.get("device_train_microbatch_size","auto"),
         save_folder=cfg.get("save_folder", None),
         save_interval=cfg.get("save_interval", "5ep"),
-        save_overwrite=cfg.get("save_overwrite", True),
+        save_overwrite=cfg.get("save_overwrite", False),
         save_num_checkpoints_to_keep=cfg.get("save_num_checkpoints_to_keep",1),
         train_subset_num_batches=cfg.get("train_subset_num_batches", -1),
         eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
