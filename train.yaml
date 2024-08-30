@@ -14,7 +14,11 @@ command: |
   export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
   composer train.py parameters.yaml
 
-
 compute:
   gpus: 8
   cluster: r8z11
+
+#enable watchdog
+scheduling:
+  retry_on_system_failure: True
+  max_retries: 10

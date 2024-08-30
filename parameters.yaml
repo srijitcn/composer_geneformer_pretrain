@@ -74,6 +74,9 @@ progress_bar: false
 log_to_console: true
 console_log_interval: 1ba
 
+#Auto resume
+autoresume : True
+
 #Checkpoint to remote object store
 save_interval: 5ep
 save_num_checkpoints_to_keep: 1  # Important, this cleans up checkpoints saved to DISK

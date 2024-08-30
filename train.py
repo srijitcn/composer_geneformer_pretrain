@@ -160,6 +160,8 @@ def main(cfg: DictConfig):
         save_num_checkpoints_to_keep=cfg.get("save_num_checkpoints_to_keep",1),
         train_subset_num_batches=cfg.get("train_subset_num_batches", -1),
         eval_subset_num_batches=cfg.get("eval_subset_num_batches", -1),
+        autoresume=cfg.get("autoresume", False),
+        #Load path required only for manual restarts
         #load_path=cfg.get("load_path", None),
         #load_weights_only=cfg.get("load_weights_only", False),
         python_log_level=cfg.get("python_log_level", None),
