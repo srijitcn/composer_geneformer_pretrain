@@ -103,9 +103,10 @@ def main(cfg):
         save_overwrite=False,
         load_path=checkpoint_file,
         callbacks=pred_saver,
-        device=cfg.get("device", "gpu"),
+#        device=cfg.get("device", "gpu"),
     )
 #    trainer.eval()
+    print("Inferencing")
     trainer.predict(eval_dataloader)
     print(sorted(os.listdir(local_pred_path)))
 
