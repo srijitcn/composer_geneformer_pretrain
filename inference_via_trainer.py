@@ -1,5 +1,4 @@
 from cfgutils import *
-
 import boto3
 import pickle
 import os
@@ -26,18 +25,11 @@ from streaming import MDSWriter, StreamingDataset
 import mlflow
 from config import load_params
 
+#https://docs.mosaicml.com/projects/composer/en/stable/api_reference/generated/composer.Trainer.html#composer.Trainer.predict
 class PredictionSaver(Callback):
     def __init__(self, folder: str):
         self.folder = folder
         os.makedirs(self.folder, exist_ok=True)
-
-    def predict_batch_end(self, state: State, logger: Logger) -> None:
-        name = f'batch_{int(state.predict_timestamp.batch)}.pt'
-        filepath = os.path.join(self.folder, name)
-        torch.save(state.outputs, filepath)
-
-        # Also upload the files
-        logger.upload_file(remote_file_name=name, file_path=filepath)
 
 def main(cfg):
     #load the model back and run some test
@@ -62,6 +54,7 @@ def main(cfg):
     # Download checkpoint from S3
     s3 = boto3.resource('s3')
     weight_content = s3.Bucket(data_bucket_name).Object(checkpoint_suffix).get()["Body"]
+    os.makedirs(local_checkpoint_path,exist_ok=True)
     with open(local_weights_file, 'wb') as f:
         for chunk in iter(lambda: weight_content.read(4096), b''):
             f.write(chunk)
@@ -108,7 +101,7 @@ def main(cfg):
         save_overwrite=False,
         load_path=checkpoint_file,
         callbacks=pred_saver,
-    #    device=cfg.get("device", "gpu"),
+        device=cfg.get("device", "gpu"),
     )
     trainer.eval()
     trainer.predict(eval_dataloader)

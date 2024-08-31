@@ -1,4 +1,4 @@
-from omegaconf import DictConfig
+from cfgutils import *
 
 def load_params(
     yaml_path = 'parameters.yaml',
