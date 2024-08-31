@@ -36,11 +36,13 @@ def main(cfg):
     working_dir = cfg.working_dir
     checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full/ep10-ba10000-rank0.pt" #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
     checkpoint_suffix = '/'.join(checkpoint_file.replace("s3://","").split('/')[1:])
+    data_bucket_name = cfg.data_bucket_name
+    data_bucket_key = cfg.data_bucket_key
 
     local_checkpoint_path = f"{working_dir}/checkpoint"
     local_weights_file = f"{local_checkpoint_path}/weights.pt"
-    data_bucket_name = cfg.data_bucket_name
-    data_bucket_key = cfg.data_bucket_key
+    local_pred_path = f"{working_dir}/pred_outputs"
+
     token_dictionary_filename = cfg.token_dictionary_filename
 
     remote_data_dir = f"s3://{data_bucket_name}/{data_bucket_key}"
@@ -92,7 +94,7 @@ def main(cfg):
 
     test_data = next(iter(eval_dataloader))
 
-    pred_saver = PredictionSaver('f{working_dir}/predict_outputs')
+    pred_saver = PredictionSaver(local_pred_path)
 
     trainer = Trainer(
         model=composer_model,
@@ -103,8 +105,9 @@ def main(cfg):
         callbacks=pred_saver,
         device=cfg.get("device", "gpu"),
     )
-    trainer.eval()
+#    trainer.eval()
     trainer.predict(eval_dataloader)
+    print(sorted(os.listdir(local_pred_path)))
 
 if __name__ == '__main__':
     cfg = load_params(sys.argv[1], sys.argv[2:])
