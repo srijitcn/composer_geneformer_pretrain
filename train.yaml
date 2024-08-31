@@ -11,8 +11,8 @@ command: |
   cd composer_geneformer_pretrain
   sh commands.sh
   echo ">>> Starting training"
-  composer -n 8 inference_full.py parameters.yaml
+  composer -n 1 inference_full.py parameters.yaml
 
 compute:
-  gpus: 8
+  gpus: 1
   cluster: r8z11
