@@ -84,3 +84,6 @@ load_path: "dbfs:/databricks/mlflow-tracking/1513674964105587/40e496beff704c7882
 save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
 #save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full"
 
+scheduling:
+  retry_on_system_failure: True
+  max_retries: 1
