@@ -14,5 +14,5 @@ command: |
   composer -n 1 inference_via_trainer.py parameters.yaml
 
 compute:
-  gpus: 1
+  gpus: 8
   cluster: r8z11

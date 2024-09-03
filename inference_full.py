@@ -122,6 +122,8 @@ def main(cfg: DictConfig):
         mlflow.pyfunc.log_model(
             python_model=pyfunc_model,
             artifact_path="model",
+            extra_pip_requirements=["git-lfs",
+                                    "geneformer @ git+https://huggingface.co/ctheodoris/Geneformer@b07f4b1e8893a0923a8fde223fe3b5a60b976d99"],
     #            signature=signature,
             registered_model_name='geneformer_10ep'
         )
