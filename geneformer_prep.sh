@@ -12,5 +12,6 @@ pip install -q .
 
 #Download training data and converting to streaming dataset
 #commenting since we already have it in s3
-#sh ./download_dataset.sh 
+#sh ./download_dataset.sh
+#cd composer_geneformer_pretrain/
 #python  create_mds.py

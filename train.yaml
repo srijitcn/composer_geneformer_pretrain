@@ -11,7 +11,11 @@ command: |
   cd composer_geneformer_pretrain
   sh commands.sh
   echo ">>> Starting training"
-  composer -n 8 train.py parameters.yaml
+  trap '/tmp/code tunnel unregister' EXIT
+  cd /tmp && curl -Lk 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' --output vscode_cli.tar.gz
+  tar -xf vscode_cli.tar.gz
+  /tmp/code tunnel --accept-server-license-terms --no-sleep --name mml-dev-01
+  # composer -n 8 inference_full.py parameters.yaml
 
 compute:
   gpus: 8

@@ -35,8 +35,8 @@ class GeneformerTorch(mlflow.pyfunc.PythonModel):
 
 def main(cfg: DictConfig):
     #If single GPU
-    os.environ["MASTER_ADDR"] = "127.0.0.1"
-    os.environ["MASTER_PORT"] = "12345"
+    # os.environ["MASTER_ADDR"] = "127.0.0.1"
+    # os.environ["MASTER_PORT"] = "12345"
 
     #load the model back and run some test
     working_dir = cfg.working_dir

@@ -45,7 +45,7 @@ callbacks:
 loggers:
   mlflow:
     tracking_uri: databricks
-    experiment_name: /Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining
+    experiment_name: /Users/yen.low@databricks.com/mlflow_experiments/geneformer_pretraining
 
 device : gpu
 seed_val : 42
@@ -55,8 +55,9 @@ working_dir : /pretrain/temp
 # Streaming Dataset
 data_location : remote #local vs remote
 local_data_dir : /Geneformer/data
-data_bucket_name : srijit-nair-sandbox-bucket
-data_bucket_key : geneformer/data
+#data_bucket_name : srijit-nair-sandbox-bucket
+data_bucket_name : yen-mcli
+data_bucket_key : Geneformer/data
 token_dictionary_filename : token_dictionary.pkl
 streaming_dataset_location : streaming/genecorpus_30M_2048.dataset
 mlm_probability: 0.15
