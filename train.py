@@ -55,7 +55,7 @@ def main(cfg: DictConfig):
     streaming_dataset_location = cfg.streaming_dataset_location
 
     # batch size for training and eval
-    train_batch_size = cfg.train_batch_size
+    train_batch_size = cfg.train_batch_size  #<< This is per device batch size
     eval_batch_size = cfg.eval_batch_size
     mlm_probability = cfg.mlm_probability
 
@@ -135,20 +135,30 @@ def main(cfg: DictConfig):
     train_dataloader = DataLoader(streaming_dataset_train,
                             shuffle=False, 
                             drop_last=False, 
-                            collate_fn=data_collator)
+                            collate_fn=data_collator,
+                            batch_size=train_batch_size,
+                            num_workers = 32,
+                            pin_memory = True,
+                            persistent_workers = True)
 
     eval_dataloader = DataLoader(streaming_dataset_eval,
                             shuffle=False, 
                             drop_last=False, 
-                            collate_fn=data_collator)
+                            collate_fn=data_collator,
+                            batch_size=eval_batch_size,
+                            num_workers = 32,
+                            pin_memory = True,
+                            persistent_workers = True)
 
     ##############################
-    #Following code is to introduce an error after 7 epochs , to see if we can restart the training from 5th
+    #Following code is to introduce an error after 7 epochs , 
+    # to see if we can restart the training from 5th epoch
+    #
     #class RaiseErrorOnEpoch7(Callback):
     #    def run_event(self, event: Event, state: State, logger: Logger):
     #        if event == Event.EPOCH_START and state.timestamp.epoch==7:
     #            raise Exception("Rescue me!!!!")
-    #        
+            
     #callbacks.append(RaiseErrorOnEpoch7())
     ##############################
 
