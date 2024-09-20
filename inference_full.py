@@ -5,10 +5,10 @@ from cfgutils import *
 import boto3
 import pickle
 import os
-from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
 import geneformer
 from geneformer.pretrainer import GeneformerPreCollator
+from transformers import pipeline, PreTrainedTokenizerBase, BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 
 import torch
 import torch.distributed.checkpoint as dcp
@@ -23,12 +23,21 @@ from streaming import MDSWriter, StreamingDataset
 
 import mlflow
 
+class GeneformerTorch(mlflow.pyfunc.PythonModel):
+    def __init__(self, config, model, tokenizer):
+        self.config = config
+        self.model = model
+        self.tokenizer = tokenizer
+    def predict(self, context, test_data):
+        return self.model(test_data["input_ids"])
+
 def main(cfg: DictConfig):
     #load the model back and run some test
     working_dir = cfg.working_dir
-    checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full/ep10-ba10000-rank0.pt" #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
+    checkpoint_file = "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/checkpoints_full/ep10-ba10000-rank0.pt" 
+    #f"{cfg.save_folder}/ep10-ba10000-rank0.pt"
     checkpoint_prefix = '/'.join(checkpoint_file.replace("s3://","").split('/')[1:])
-    
+
     local_checkpoint_path = f"{working_dir}/checkpoint"
     local_weights_file = f"{local_checkpoint_path}/weights.pt"
     data_bucket_name = cfg.data_bucket_name
@@ -38,7 +47,7 @@ def main(cfg: DictConfig):
     streaming_dataset_location = cfg.streaming_dataset_location
 
     remote_streaming_dataset_location = f"{remote_data_dir}/{streaming_dataset_location}"
-    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"    
+    streaming_dataset_cache_location = f"{working_dir}/streaming/cache"
     mlm_probability = cfg.mlm_probability
     eval_batch_size = cfg.eval_batch_size
     # Read the token dictionary file
@@ -66,30 +75,54 @@ def main(cfg: DictConfig):
     config = BertConfig(**model_config)
     model = BertForMaskedLM(config)
     model.load_state_dict(model_state_dict)
-    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)    
-    
-    ##Run inference
+    tokenizer = GeneformerPreCollator(token_dictionary=token_dictionary)
+    pyfunc_model = GeneformerTorch(config, model, tokenizer)
+
+    #Run inference
     print("Getting test data")
-    streaming_dataset_eval = StreamingDataset(remote=f"{remote_streaming_dataset_location}/test", local=f"{streaming_dataset_cache_location}/test" ,batch_size=eval_batch_size)
+    streaming_dataset_eval = StreamingDataset(local=f"{streaming_dataset_cache_location}/test1",
+                                            remote=f"{remote_streaming_dataset_location}/test",
+                                            download_retry=1,
+                                            batch_size=eval_batch_size)
+
     data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, 
-        mlm=True, 
+        tokenizer=tokenizer,
+        mlm=True,
         mlm_probability=mlm_probability
     )
 
     eval_dataloader = DataLoader(streaming_dataset_eval,
-                            shuffle=False, 
-                            drop_last=False, 
+                            shuffle=False,
+                            drop_last=False,
                             collate_fn=data_collator)
-    
-    
+
     test_data = next(iter(eval_dataloader))
-    
+
     print("Perform inference")
     result = model(test_data["input_ids"])
-    
-    print("Result")
+
+    print("Result from torch load model")
     print(result)
+
+    print("Log the model to mlflow")
+    mlflow.set_registry_uri("databricks")
+    mlflow.set_tracking_uri("databricks")
+    experiment_base_path = f"Users/srijit.nair@databricks.com/mlflow_experiments/geneformer_pretraining"
+    experiment = mlflow.set_experiment(experiment_base_path)
+
+    with mlflow.start_run(experiment_id=experiment.experiment_id) as mlflow_run:
+        mlflow.pyfunc.log_model(
+            python_model=pyfunc_model,
+            artifact_path="model",
+            extra_pip_requirements=["git-lfs",
+                                    "geneformer @ git+https://huggingface.co/ctheodoris/Geneformer@b07f4b1e8893a0923a8fde223fe3b5a60b976d99"],
+            registered_model_name='geneformer_10ep'
+        )
+    run_id = mlflow_run.info.run_id
+    loaded_model = mlflow.pyfunc.load_model(f"runs:/{run_id}/model")
+    results_mlflow = loaded_model.predict(test_data)
+    print("Result from mlflow loaded model")
+    print(results_mlflow)
 
 if __name__ == '__main__':
     yaml_path, args_list = sys.argv[1], sys.argv[2:]
