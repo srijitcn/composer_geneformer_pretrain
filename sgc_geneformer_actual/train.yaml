@@ -22,15 +22,18 @@ environment:
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
   dependencies: dependencies.yaml
 compute:
-  gpus: 16
-  gpu_type: h100
+  # gpus: 16
+  # gpu_type: h100
+  gpus: 1
+  gpu_type: a10
 max_retries: 0
 code_source:
   type: snapshot
   snapshot:
     # git_branch: sgc_cli_guanyu
     # git_commit: 9de28424209f0950c9d3204967e8742a7ac5a148
-    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+    # repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/sgc_geneformer_actual/
 command: |-
   cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
   echo ">>> In actual training folder, starting training"

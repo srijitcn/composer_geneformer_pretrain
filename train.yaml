@@ -1,25 +1,19 @@
-name: geneformer-pretrain
-image: mosaicml/pytorch:2.2.2_cu121-python3.11-ubuntu20.04
-#image: mosaicml/composer:latest
-
-integrations:
-- integration_type: git_repo
-  git_repo: srijitcn/composer_geneformer_pretrain
-  git_branch: main # use your branch
-  ssh_clone: true # Should be true if using a private repo
-
-command: |
-  cd composer_geneformer_pretrain
+experiment_name: geneformer-pretrain
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 8
+  gpu_type: h100
+max_retries: 3
+code_source:
+  type: snapshot
+  snapshot:
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/
+command: |-
+  cd $HOME/composer_geneformer_pretrain
   sh commands.sh
   echo ">>> Starting training"
   export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
   composer train.py parameters.yaml
-
-compute:
-  gpus: 8
-  cluster: r8z11
-
-#enable watchdog
-scheduling:
-  retry_on_system_failure: True
-  max_retries: 3
