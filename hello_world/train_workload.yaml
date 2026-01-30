@@ -9,8 +9,8 @@ compute:
 max_retries: 0
 command: |-
 
-  # Path is relative to the repo snapshot root on the cluster.
-  TRAIN_SCRIPT="hello_world/train_guanyu.py"
+  # Use the absolute path to the script in the job working directory.
+  TRAIN_SCRIPT="/databricks/driver/hello_world/train_guanyu.py"
 
   torchrun \
     --nnodes=1 \
