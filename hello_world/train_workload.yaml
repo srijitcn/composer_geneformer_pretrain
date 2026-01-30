@@ -2,8 +2,8 @@ experiment_name: torchrun-hello-world-guanyu
 environment:
   env_variables:
     NCCL_DEBUG: "INFO"
-  # Use empty deps file; we'll install manually in the command block.
-  dependencies: dependencies_none.yaml
+  # Use the default deps file (we still install manually below).
+  dependencies: dependencies.yaml
 compute:
   gpus: 2
   gpu_type: a10
@@ -13,10 +13,6 @@ code_source:
   snapshot:
     repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain
 command: |-
-  # Install deps manually to avoid hash mismatch
-  pip install --upgrade pip
-  pip install --no-cache-dir transformers==5.0.0 accelerate==1.12.0
-
   cd $HOME/composer_geneformer_pretrain/hello_world
   TRAIN_SCRIPT="$PWD/train_guanyu.py"
 
