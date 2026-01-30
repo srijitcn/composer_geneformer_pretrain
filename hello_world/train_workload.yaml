@@ -9,11 +9,12 @@ compute:
 max_retries: 0
 command: |-
 
-  TRAIN_SCRIPT="/Workspace/Users/guanyu.chen@databricks.com/sgc-cli-test/train_guanyu.py"
-   
+  # Path is relative to the repo snapshot root on the cluster.
+  TRAIN_SCRIPT="hello_world/train_guanyu.py"
+
   torchrun \
-    --nnodes=2 \
-    --nproc_per_node=1 \
+    --nnodes=1 \
+    --nproc_per_node=2 \
     --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
