@@ -7,10 +7,14 @@ compute:
   gpus: 2
   gpu_type: a10
 max_retries: 0
+code_source:
+  type: snapshot
+  snapshot:
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain
 command: |-
 
-  # Use the absolute path to the script within the repo snapshot on the driver.
-  TRAIN_SCRIPT="/databricks/driver/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/hello_world/train_guanyu.py"
+  # Path to the script inside the uploaded snapshot on the driver.
+  TRAIN_SCRIPT="$HOME/composer_geneformer_pretrain/hello_world/train_guanyu.py"
 
   torchrun \
     --nnodes=1 \
