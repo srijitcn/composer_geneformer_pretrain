@@ -1,12 +1,30 @@
-echo ">>> Installing Geneformer"
-cd /composer_geneformer_pretrain
-sh geneformer_prep.sh 
+#install git-lfs , pre-req for geneformer clone
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+apt-get install git-lfs
+git lfs install
 
-echo ">>> Installing dependencies"
-pip install -r requirements.txt
+#install geneformer
+cd /
+git clone https://huggingface.co/ctheodoris/Geneformer
+cd Geneformer
+git checkout b07f4b1e8893a0923a8fde223fe3b5a60b976d99
+pip install .
 
-# Create working directory
-mkdir -p /pretrain/temp
+#Download training data and converting to streaming dataset
+#commenting since we already have it in s3
+#sh ./download_dataset.sh 
+#python  create_mds.py
+
+
+# echo ">>> Installing Geneformer"
+# cd /composer_geneformer_pretrain
+# sh geneformer_prep.sh 
+
+# echo ">>> Installing dependencies"
+# pip install -r requirements.txt
+
+# # Create working directory
+# mkdir -p /pretrain/temp
 
 #sh download_dataset.sh
 ##################################################
