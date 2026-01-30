@@ -33,7 +33,7 @@ code_source:
     # git_branch: sgc_cli_guanyu
     # git_commit: 9de28424209f0950c9d3204967e8742a7ac5a148
     # repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
-    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/sgc_geneformer_actual/
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/
 command: |-
   cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
   echo ">>> In actual training folder, starting training"
