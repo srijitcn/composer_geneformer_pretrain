@@ -6,7 +6,7 @@
 # - image: Extra inputs are not permitted
 # - integrations: Extra inputs are not permitted
 # - scheduling: Extra inputs are not permitted
-experiment_name: geneformer-guanyu
+experiment_name: geneformer-mmt-test-gy-actual
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
