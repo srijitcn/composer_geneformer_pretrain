@@ -3,7 +3,7 @@ environment:
   env_variables:
     NCCL_DEBUG: "INFO"
   # Skip automatic deps install (hash mismatch issues); install manually below.
-  dependencies: []
+  dependencies: dependencies_none.yaml
 compute:
   gpus: 2
   gpu_type: a10
