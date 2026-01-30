@@ -8,15 +8,15 @@ compute:
   gpus: 2
   gpu_type: a10
 max_retries: 0
-code_source:
-  type: snapshot
-  snapshot:
-    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain
+# code_source:
+#   type: snapshot
+#   snapshot:
+#     repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain
 command: |-
 
-  # Manually install deps to avoid hash mismatch from resolved lock.
-  pip install --upgrade pip
-  pip install --no-cache-dir transformers==5.0.0 accelerate==1.12.0
+  # # Manually install deps to avoid hash mismatch from resolved lock.
+  # pip install --upgrade pip
+  # pip install --no-cache-dir transformers==5.0.0 accelerate==1.12.0
 
   # Path to the script inside the uploaded snapshot on the driver.
   TRAIN_SCRIPT="$HOME/composer_geneformer_pretrain/hello_world/train_guanyu.py"
