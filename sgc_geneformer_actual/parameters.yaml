@@ -83,4 +83,5 @@ save_num_checkpoints_to_keep: 3
 save_overwrite: True #overwrite checkpoint if exists
 #save_folder: "dbfs:/databricks/mlflow-tracking/{mlflow_experiment_id}/{mlflow_run_id}/artifacts/"
 #save_folder: "s3://srijit-nair-sandbox-bucket/geneformer/pretrain/demo/restart/checkpoints/full"
-save_folder: "/Volumes/main/guanyu_chen/sgc/checkpoints/20eps/"
+# save_folder: "/Volumes/main/guanyu_chen/sgc/checkpoints/20eps/"
+save_folder: "/Volumes/main/srijit_nair/geneformer/tmp/geneformer_sgcli_mmt_test/checkpoints/"
