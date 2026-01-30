@@ -5,7 +5,7 @@ environment:
   # Use the default deps file (we still install manually below).
   dependencies: dependencies.yaml
 compute:
-  gpus: 2
+  gpus: 1
   gpu_type: a10
 max_retries: 0
 code_source:
