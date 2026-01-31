@@ -81,6 +81,27 @@ def main(cfg: DictConfig):
     reproducibility.configure_deterministic_mode()
     reproducibility.seed_all(seed_val)
 
+    # Quick visibility into GPUs and distributed env.
+    if torch.cuda.is_available():
+        gpu_count = torch.cuda.device_count()
+        print(f"[gpu-check] CUDA_VISIBLE_DEVICES={os.getenv('CUDA_VISIBLE_DEVICES')}")
+        print(f"[gpu-check] torch.cuda.device_count()={gpu_count}")
+        for i in range(gpu_count):
+            p = torch.cuda.get_device_properties(i)
+            print(f"[gpu-check] {i}: {p.name} {p.total_memory/1e9:.1f} GB")
+    else:
+        print("[gpu-check] CUDA not available")
+    print(
+        f"[gpu-check] NNODES={os.getenv('NNODES')} "
+        f"NPROC_PER_NODE={os.getenv('NPROC_PER_NODE')} "
+        f"WORLD_SIZE={os.getenv('WORLD_SIZE')}"
+    )
+    print(
+        f"[gpu-check] MASTER_ADDR={os.getenv('MASTER_ADDR')} "
+        f"MASTER_PORT={os.getenv('MASTER_PORT')} "
+        f"NODE_RANK={os.getenv('NODE_RANK')}"
+    )
+
     loggers = [
         build_logger(name, logger_cfg)
         for name, logger_cfg in cfg.get('loggers', {}).items()

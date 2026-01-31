@@ -67,8 +67,8 @@ eval_batch_size: 16
 device_train_microbatch_size : 16
 train_subset_num_batches : 100
 eval_subset_num_batches : 10
-max_duration: 20ep
-eval_interval: 10ep
+max_duration: 1ep #20ep #drives how many epochs Composer will train before stopping
+eval_interval: 1ep #10ep
 # Logging
 progress_bar: false
 log_to_console: true

@@ -6,7 +6,7 @@
 # - image: Extra inputs are not permitted
 # - integrations: Extra inputs are not permitted
 # - scheduling: Extra inputs are not permitted
-experiment_name: geneformer-mmt-test-gy-actual
+experiment_name: geneformer-mmt-test-gy-actual_h100_n16_composer
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
@@ -22,11 +22,11 @@ environment:
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
   dependencies: dependencies.yaml
 compute:
-  # gpus: 16
-  # gpu_type: h100
-  gpus: 8
-  gpu_type: a10
-max_retries: 0
+  gpus: 16
+  gpu_type: h100
+  # gpus: 8
+  # gpu_type: a10
+max_retries: 1
 code_source:
   type: snapshot
   snapshot:
@@ -41,6 +41,8 @@ command: |-
   echo ">>> Starting training"
   export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
   composer train.py parameters.yaml
+# run train.py parameters.yaml
+  
 # command: |-
 #   train_path="/Workspace/Users/guanyu.chen@databricks.com/composer_geneformer/"
 #   cd $train_path
