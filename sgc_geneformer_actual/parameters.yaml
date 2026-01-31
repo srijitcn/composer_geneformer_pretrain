@@ -50,7 +50,7 @@ loggers:
 
 device : gpu
 seed_val : 42
-run_name : geneformer_pretrain
+run_name : geneformer_pretrain ##to add timestamp to the run name
 working_dir : /pretrain/temp  
 
 # Streaming Dataset
@@ -74,8 +74,8 @@ progress_bar: false
 log_to_console: true
 console_log_interval: 1ba
 
-#Auto resume
-autoresume : True
+# Auto resume disabled to avoid resuming a run that already completed 20ep.
+autoresume : False
 
 #Checkpoint to local volume (S3 commented out due to credentials issue)
 save_interval: 20ep

@@ -246,8 +246,9 @@ def main(cfg: DictConfig):
         callbacks=callbacks,
 
     )
-    # Start training
-    trainer.fit()
+    # Start training; reset_time allows continued training even if elapsed time
+    # already equals the configured max_duration (e.g., after a resume).
+    trainer.fit(reset_time=True)
 
     print(trainer.state.train_metrics)
     print(trainer.state.eval_metrics)
