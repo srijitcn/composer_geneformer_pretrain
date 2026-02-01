@@ -6,11 +6,11 @@
 # - image: Extra inputs are not permitted
 # - integrations: Extra inputs are not permitted
 # - scheduling: Extra inputs are not permitted
-experiment_name: sgcli-cmdnver-geneformer-mmt-test-gy-actual_h100_n16_composer
+experiment_name: sgcli-gycli-geneformer-mmt-test-gy-actual_h100_n16_composer
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
-    NCCL_DEBUG: "INFO"  
+    NCCL_DEBUG: "INFO"
     NCCL_SOCKET_IFNAME: "eth"            # Use eth interfaces (auto-match eth0, eth1, etc.)
     NCCL_IB_DISABLE: "1"                 # Disable InfiniBand if not available
     NCCL_ASYNC_ERROR_HANDLING: "1"       # Better async error handling
@@ -22,10 +22,10 @@ environment:
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
   dependencies: dependencies.yaml
 compute:
-  # gpus: 16
-  # gpu_type: h100
-  gpus: 8
-  gpu_type: a10
+  gpus: 16
+  gpu_type: h100
+  # gpus: 8
+  # gpu_type: a10
 max_retries: 1
 code_source:
   type: snapshot
