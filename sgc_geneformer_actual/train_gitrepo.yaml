@@ -1,6 +1,6 @@
 # Run from remote git repo (manual clone approach)
 # This is identical to train.yaml but clones from remote git instead of local snapshot
-experiment_name: sgcli-gycli-geneformer-mmt-test-gy-actual_h100_n16_composer_git
+experiment_name: sgcli-gycli-geneformer-mmt-test-gy-actual_a10_n1_composer_git
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
@@ -15,9 +15,9 @@ environment:
     # Increase TCP store timeout for multi-node coordination
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
     # Topology guards | fast fail if not matching
-    EXPECT_NNODES: "2"
-    EXPECT_GPUS_PER_NODE: "8"
-    EXPECT_GPU_TYPE: "h100"
+    # EXPECT_NNODES: "2"
+    # EXPECT_GPUS_PER_NODE: "8"
+    # EXPECT_GPU_TYPE: "h100"
   dependencies: dependencies.yaml
 compute:
   # gpus: 16
