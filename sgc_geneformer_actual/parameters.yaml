@@ -45,8 +45,8 @@ callbacks:
 #make sure you have configured databricks secret | overwritten by train.yaml
 loggers:
   mlflow:
-    # tracking_uri: databricks
-    tracking_uri: databricks-uc
+    tracking_uri: databricks
+    # tracking_uri: databricks-uc  # Not supported in MLflow 2.22.4
     experiment_name: mlflow_experiments/geneformer_pretraining
 
 device : gpu
