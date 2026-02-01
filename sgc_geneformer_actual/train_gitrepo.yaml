@@ -19,11 +19,9 @@ compute:
   gpu_type: h100
 max_retries: 1
 code_source:
-  type: snapshot
-  snapshot:
-    # Remote git repo + branch
-    git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
-    git_branch: sgc_cli_gy_mmt_test
+  type: git
+  git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
+  git_branch: sgc_cli_gy_mmt_test
 command: |-
   cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
   echo ">>> In actual training folder, starting training (remote git version)"
