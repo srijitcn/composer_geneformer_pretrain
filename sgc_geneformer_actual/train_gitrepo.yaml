@@ -25,7 +25,7 @@ compute:
   gpus: 1 #8
   gpu_type: a10
 max_retries: 1
-What the SGCLI schema supports:
+# What the SGCLI schema supports:
 # code_source.type: snapshot - Only accepts repo_path (local path). Adding git_branch caused validation errors.
 # code_source.type: git_clone - Should accept git_repo and git_branch, but caused chmod errors on multi-node runs.
 
