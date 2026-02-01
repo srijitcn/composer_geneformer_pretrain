@@ -25,38 +25,39 @@ compute:
   gpus: 1 #8
   gpu_type: a10
 max_retries: 1
-# What the SGCLI schema supports:
+What the SGCLI schema supports:
 # code_source.type: snapshot - Only accepts repo_path (local path). Adding git_branch caused validation errors.
 # code_source.type: git_clone - Should accept git_repo and git_branch, but caused chmod errors on multi-node runs.
 
-# code_source:
-#   type: snapshot
-#   snapshot:
-#     # Minimal local snapshot (required by schema), but we override with git clone below
-#     repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/
-# command: |-
-#   # Clone from remote git repo (overrides the snapshot)
-#   echo ">>> Cloning remote git repo"
-#   rm -rf /root/composer_geneformer_pretrain
-#   git clone --branch sgc_cli_gy_mmt_test --depth 1 https://github.com/srijitcn/composer_geneformer_pretrain.git /root/composer_geneformer_pretrain
-
-#   cd /root/composer_geneformer_pretrain/sgc_geneformer_actual
-#   echo ">>> In actual training folder, starting training (remote git version)"
-#   sh commands.sh
-#   echo ">>> Starting training"
-#   export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
-#   composer train.py parameters.yaml
-
 code_source:
-  type: git_clone
-  git_clone:
-    git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
-    git_branch: sgc_cli_gy_mmt_test
+  type: snapshot
+  snapshot:
+    # Minimal local snapshot (required by schema), but we override with git clone below
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/
 command: |-
-  # SGCLI clones to $HOME/composer_geneformer_pretrain (or /root/...)
-  cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
-  echo ">>> In actual training folder, starting training (git_clone version)"
+  # Clone from remote git repo (overrides the snapshot)
+  echo ">>> Cloning remote git repo"
+  rm -rf /root/composer_geneformer_pretrain
+  git clone --branch sgc_cli_gy_mmt_test --depth 1 https://github.com/srijitcn/composer_geneformer_pretrain.git /root/composer_geneformer_pretrain
+
+  cd /root/composer_geneformer_pretrain/sgc_geneformer_actual
+  echo ">>> In actual training folder, starting training (remote git version)"
   sh commands.sh
   echo ">>> Starting training"
   export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
   composer train.py parameters.yaml
+
+# # NOTE: code_source.type: git_clone causes chmod errors - use snapshot + manual clone instead
+# code_source:
+#   type: git_clone
+#   git_clone:
+#     git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
+#     git_branch: sgc_cli_gy_mmt_test
+# command: |-
+#   # SGCLI clones to $HOME/composer_geneformer_pretrain (or /root/...)
+#   cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
+#   echo ">>> In actual training folder, starting training (git_clone version)"
+#   sh commands.sh
+#   echo ">>> Starting training"
+#   export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
+#   composer train.py parameters.yaml
