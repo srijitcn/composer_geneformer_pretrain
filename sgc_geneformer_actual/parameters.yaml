@@ -42,10 +42,11 @@ callbacks:
   lr_monitor: {}
   memory_monitor: {}  # for monitoring model memory usage in gpu
 
-#make sure you have configured databricks secret
+#make sure you have configured databricks secret | overwritten by train.yaml
 loggers:
   mlflow:
-    tracking_uri: databricks
+    # tracking_uri: databricks
+    tracking_uri: databricks-uc
     experiment_name: mlflow_experiments/geneformer_pretraining
 
 device : gpu

@@ -19,19 +19,17 @@ compute:
   gpu_type: h100
 max_retries: 1
 code_source:
-  type: git_clone
-  git_clone:
-    git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
+  type: snapshot
+  snapshot:
+    # Local git repo + branch (supported by sgcli schema)
     git_branch: sgc_cli_gy_mmt_test
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain
 command: |-
-  echo ">>> Debug repo location"
-  echo "PWD=$PWD"
-  echo "HOME=$HOME"
-  ls -la $HOME || true
-  ls -la $HOME/composer_geneformer_pretrain || true
-  ls -la /root || true
+  echo ">>> Cloning remote repo"
+  rm -rf /root/composer_geneformer_pretrain
+  git clone --branch sgc_cli_gy_mmt_test --depth 1 https://github.com/srijitcn/composer_geneformer_pretrain.git /root/composer_geneformer_pretrain
 
-  cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
+  cd /root/composer_geneformer_pretrain/sgc_geneformer_actual
   echo ">>> In actual training folder, starting training (remote git version)"
   sh commands.sh
   echo ">>> Starting training"
