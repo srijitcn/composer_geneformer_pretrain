@@ -23,10 +23,15 @@ code_source:
   git_clone:
     git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
     git_branch: sgc_cli_gy_mmt_test
-    # Clone destination on the driver
-    repo_path: /databricks/driver/composer_geneformer_pretrain
 command: |-
-  cd /databricks/driver/composer_geneformer_pretrain/sgc_geneformer_actual
+  echo ">>> Debug repo location"
+  echo "PWD=$PWD"
+  echo "HOME=$HOME"
+  ls -la $HOME || true
+  ls -la $HOME/composer_geneformer_pretrain || true
+  ls -la /root || true
+
+  cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
   echo ">>> In actual training folder, starting training (remote git version)"
   sh commands.sh
   echo ">>> Starting training"
