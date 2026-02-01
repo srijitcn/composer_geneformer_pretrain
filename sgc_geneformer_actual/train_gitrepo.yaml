@@ -20,10 +20,10 @@ environment:
     EXPECT_GPU_TYPE: "h100"
   dependencies: dependencies.yaml
 compute:
-  gpus: 16
-  gpu_type: h100
-  # gpus: 8
-  # gpu_type: a10
+  # gpus: 16
+  # gpu_type: h100
+  gpus: 1 #8
+  gpu_type: a10
 max_retries: 1
 code_source:
   type: snapshot
