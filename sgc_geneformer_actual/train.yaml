@@ -20,6 +20,10 @@ environment:
     TORCH_NCCL_BLOCKING_WAIT: "1"        # Use blocking wait for better error reporting
     # Increase TCP store timeout for multi-node coordination
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
+    # Topology guards | fast fail if not matching
+    EXPECT_NNODES: "2"
+    EXPECT_GPUS_PER_NODE: "8"
+    EXPECT_GPU_TYPE: "h100"
   dependencies: dependencies.yaml
 compute:
   gpus: 16
