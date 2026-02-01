@@ -1,0 +1,33 @@
+# Run from remote git (branch-based) instead of a local snapshot.
+experiment_name: sgcli-gycli-geneformer-mmt-test-gy-actual_h100_n16_composer_git
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+    NCCL_SOCKET_IFNAME: "eth"
+    NCCL_IB_DISABLE: "1"
+    NCCL_ASYNC_ERROR_HANDLING: "1"
+    NCCL_TIMEOUT: "1800"
+    TORCH_DISTRIBUTED_DEBUG: "DETAIL"
+    TORCH_NCCL_BLOCKING_WAIT: "1"
+    TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
+    EXPECT_NNODES: "2"
+    EXPECT_GPUS_PER_NODE: "8"
+    EXPECT_GPU_TYPE: "h100"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 16
+  gpu_type: h100
+max_retries: 1
+code_source:
+  type: snapshot
+  snapshot:
+    # Remote git repo + branch
+    git_repo: https://github.com/srijitcn/composer_geneformer_pretrain.git
+    git_branch: sgc_cli_gy_mmt_test
+command: |-
+  cd $HOME/composer_geneformer_pretrain/sgc_geneformer_actual
+  echo ">>> In actual training folder, starting training (remote git version)"
+  sh commands.sh
+  echo ">>> Starting training"
+  export MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING=true
+  composer train.py parameters.yaml
