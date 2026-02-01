@@ -1,15 +1,20 @@
-# Run from remote git (branch-based) instead of a local snapshot.
+# Run from remote git repo (manual clone approach)
+# This is identical to train.yaml but clones from remote git instead of local snapshot
 experiment_name: sgcli-gycli-geneformer-mmt-test-gy-actual_h100_n16_composer_git
 environment:
   env_variables:
+    # NCCL settings for multi-node H100 training
     NCCL_DEBUG: "INFO"
-    NCCL_SOCKET_IFNAME: "eth"
-    NCCL_IB_DISABLE: "1"
-    NCCL_ASYNC_ERROR_HANDLING: "1"
-    NCCL_TIMEOUT: "1800"
-    TORCH_DISTRIBUTED_DEBUG: "DETAIL"
-    TORCH_NCCL_BLOCKING_WAIT: "1"
+    NCCL_SOCKET_IFNAME: "eth"            # Use eth interfaces (auto-match eth0, eth1, etc.)
+    NCCL_IB_DISABLE: "1"                 # Disable InfiniBand if not available
+    NCCL_ASYNC_ERROR_HANDLING: "1"       # Better async error handling
+    NCCL_TIMEOUT: "1800"                 # 30 min timeout for large barrier ops
+    # PyTorch distributed settings
+    TORCH_DISTRIBUTED_DEBUG: "DETAIL"    # More verbose debugging
+    TORCH_NCCL_BLOCKING_WAIT: "1"        # Use blocking wait for better error reporting
+    # Increase TCP store timeout for multi-node coordination
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
+    # Topology guards | fast fail if not matching
     EXPECT_NNODES: "2"
     EXPECT_GPUS_PER_NODE: "8"
     EXPECT_GPU_TYPE: "h100"
@@ -17,15 +22,17 @@ environment:
 compute:
   gpus: 16
   gpu_type: h100
+  # gpus: 8
+  # gpu_type: a10
 max_retries: 1
 code_source:
   type: snapshot
   snapshot:
-    # Local git repo + branch (supported by sgcli schema)
-    git_branch: sgc_cli_gy_mmt_test
-    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain
+    # Minimal local snapshot (required by schema), but we override with git clone below
+    repo_path: /Users/may.merkletan/Documents/Projects/Merck/composer_geneformer_pretrain_ref/composer_geneformer_pretrain/
 command: |-
-  echo ">>> Cloning remote repo"
+  # Clone from remote git repo (overrides the snapshot)
+  echo ">>> Cloning remote git repo"
   rm -rf /root/composer_geneformer_pretrain
   git clone --branch sgc_cli_gy_mmt_test --depth 1 https://github.com/srijitcn/composer_geneformer_pretrain.git /root/composer_geneformer_pretrain
 
