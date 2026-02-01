@@ -10,7 +10,7 @@ experiment_name: geneformer-mmt-test-gy-actual_h100_n16_composer
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
-    NCCL_DEBUG: "INFO"
+    NCCL_DEBUG: "INFO"  
     NCCL_SOCKET_IFNAME: "eth"            # Use eth interfaces (auto-match eth0, eth1, etc.)
     NCCL_IB_DISABLE: "1"                 # Disable InfiniBand if not available
     NCCL_ASYNC_ERROR_HANDLING: "1"       # Better async error handling
