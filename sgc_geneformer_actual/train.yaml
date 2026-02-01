@@ -6,7 +6,7 @@
 # - image: Extra inputs are not permitted
 # - integrations: Extra inputs are not permitted
 # - scheduling: Extra inputs are not permitted
-experiment_name: sgcli-gycli-geneformer-mmt-test-gy-actual_h100_n16_composer
+experiment_name: sgcli-cli-cmdnver-geneformer-mmt-test-gy-actual_h100_n16_composer
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
