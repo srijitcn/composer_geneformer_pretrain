@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo ">>> Starting Prov-GigaPath finetuning"
-cd "$HOME/composer_geneformer_pretrain/prov_gigapath"
+cd "$HOME/composer_geneformer_pretrain/SGC_gigapath"
 
 # Root path should point to PANDA H5 embeddings directory.
 # Example: /Volumes/main/<schema>/<volume>/gigapath/data/GigaPath_PANDA_embeddings/h5_files

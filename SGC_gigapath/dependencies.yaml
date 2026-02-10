@@ -1,16 +1,27 @@
 version: "4"
 dependencies:
+  - omegaconf
+  - torchmetrics==0.10.3
+  - fvcore
+  - iopath
+  - xformers==0.0.18
+  - huggingface-hub==0.20.2
+  - h5py
   - numpy
   - pandas
+  - pillow
+  - tqdm
+  - einops
+  - webdataset
+  - matplotlib
+  - lifelines
+  - scikit-survival
   - scikit-learn
   - tensorboard
-  - omegaconf
-  - einops
-  - timm>=1.0.3
-  - huggingface-hub==0.20.2
-  - torchmetrics==0.10.3
   - fairscale
   - wandb
-  - tqdm
-  - h5py
+  - timm>=1.0.3
+  - packaging==23.2
+  - ninja==1.11.1.1
+  - transformers==4.36.2
   - pyyaml
