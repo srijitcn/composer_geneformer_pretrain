@@ -149,6 +149,9 @@ class LongNetViT(nn.Module):
         # calculate the segment length
         segment_length = np.linspace(np.log2(1024), int(np.log2(max_seq_len)), 5)
         segment_length = np.power(2, segment_length).astype(int)
+        # Cast numpy scalars to built-in ints so downstream eval() sees "[1024, ...]"
+        # instead of "[np.int64(1024), ...]".
+        segment_length = [int(x) for x in segment_length]
         # convert to str format
         segment_length = str(list(segment_length))
         return segment_length
