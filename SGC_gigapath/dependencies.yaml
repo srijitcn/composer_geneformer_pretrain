@@ -1,0 +1,16 @@
+version: "4"
+dependencies:
+  - numpy
+  - pandas
+  - scikit-learn
+  - tensorboard
+  - omegaconf
+  - einops
+  - timm>=1.0.3
+  - huggingface-hub==0.20.2
+  - torchmetrics==0.10.3
+  - fairscale
+  - wandb
+  - tqdm
+  - h5py
+  - pyyaml
