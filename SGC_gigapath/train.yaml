@@ -20,4 +20,4 @@ code_source:
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
 command: |-
   cd $HOME/composer_geneformer_pretrain/SGC_gigapath
-  sh commands.sh
+  bash commands.sh
