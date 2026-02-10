@@ -11,6 +11,59 @@ OUTPUT_DIR="${GIGAPATH_OUTPUT_DIR:-outputs/PANDA}"
 EPOCHS="${GIGAPATH_EPOCHS:-5}"
 PRETRAINED="${GIGAPATH_PRETRAINED:-}"
 
+count_train_matches() {
+  local candidate_root="$1"
+  python - "$candidate_root" <<'PY'
+import csv
+import os
+import sys
+
+root = sys.argv[1]
+train_csv = "dataset_csv/PANDA/train_0.csv"
+if not os.path.exists(root):
+    print(0)
+    raise SystemExit(0)
+
+count = 0
+with open(train_csv, newline="") as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        sid = row["slide_id"]
+        if os.path.exists(os.path.join(root, f"{sid}.h5")):
+            count += 1
+print(count)
+PY
+}
+
+CURRENT_MATCHES="$(count_train_matches "${ROOT_PATH}")"
+if [[ "${CURRENT_MATCHES}" -eq 0 ]]; then
+  echo ">>> No training .h5 files found under ROOT_PATH=${ROOT_PATH}"
+  echo ">>> Trying common fallback directories..."
+  CANDIDATES=(
+    "/Volumes/main/guanyu_chen/sgc/gigapath/data/dinov2_features/h5_files"
+    "/Volumes/main/guanyu_chen/sgc/gigapath/data/GigaPath_PANDA_embeddings/h5_files"
+    "/Volumes/main/guanyu_chen/sgc/gigapath/data/h5_files"
+  )
+  BEST_ROOT=""
+  BEST_MATCHES=0
+  for cand in "${CANDIDATES[@]}"; do
+    matches="$(count_train_matches "${cand}")"
+    echo ">>> candidate=${cand} train_matches=${matches}"
+    if [[ "${matches}" -gt "${BEST_MATCHES}" ]]; then
+      BEST_MATCHES="${matches}"
+      BEST_ROOT="${cand}"
+    fi
+  done
+  if [[ "${BEST_MATCHES}" -gt 0 ]]; then
+    ROOT_PATH="${BEST_ROOT}"
+    echo ">>> Auto-selected ROOT_PATH=${ROOT_PATH} (train_matches=${BEST_MATCHES})"
+  else
+    echo ">>> ERROR: Could not find any matching PANDA .h5 files."
+    echo ">>> Set GIGAPATH_ROOT_PATH to the directory containing <slide_id>.h5 files."
+    exit 1
+  fi
+fi
+
 echo ">>> ROOT_PATH=${ROOT_PATH}"
 echo ">>> OUTPUT_DIR=${OUTPUT_DIR}"
 echo ">>> EPOCHS=${EPOCHS}"

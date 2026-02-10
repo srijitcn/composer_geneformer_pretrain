@@ -4,7 +4,7 @@ environment:
     NCCL_DEBUG: "INFO"
     # Optional: set HuggingFace token only if using pretrained hub weights.
     # HF_TOKEN: "<your_hf_token>"
-    GIGAPATH_ROOT_PATH: /Volumes/main/guanyu_chen/sgc/gigapath/data/GigaPath_PANDA_embeddings/h5_files
+    GIGAPATH_ROOT_PATH: /Volumes/main/guanyu_chen/sgc/gigapath/data/dinov2_features/GigaPath_PANDA_embeddings/h5_files
     GIGAPATH_OUTPUT_DIR: outputs/PANDA
     GIGAPATH_EPOCHS: "5"
     # Empty => random init. Set to hf_hub:prov-gigapath/prov-gigapath to load pretrained.
