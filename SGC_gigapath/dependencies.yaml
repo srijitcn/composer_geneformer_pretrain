@@ -4,7 +4,7 @@ dependencies:
   - torchmetrics==0.10.3
   - fvcore
   - iopath
-  - xformers==0.0.18
+  - xformers>=0.0.20
   - huggingface-hub==0.20.2
   - h5py
   - numpy
