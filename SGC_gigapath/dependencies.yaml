@@ -25,4 +25,3 @@ dependencies:
   - ninja==1.11.1.1
   - transformers==4.36.2
   - pyyaml
-  - flash-attn==2.8.3
