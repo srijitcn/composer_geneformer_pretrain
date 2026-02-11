@@ -11,6 +11,7 @@ from torchscale.architecture.config import EncoderConfig
 from torchscale.architecture.decoder import Decoder, DecoderLayer
 from torchscale.architecture.encoder import Encoder, EncoderLayer
 from torchscale.component.dilated_attention import DilatedAttention
+from torchscale.component.flash_attention import flash_attn_func
 from fairscale.nn import checkpoint_wrapper, wrap
 
 
@@ -118,6 +119,9 @@ def make_longnet_from_name(config_name: str,
     # set dilated ratio and segment length
     longnet_args['dilated_ratio'] = dilated_ratio
     longnet_args['segment_length'] = segment_length
+    if longnet_args.get('flash_attention', False) and flash_attn_func is None:
+        print('flash_attention backend unavailable; falling back to standard attention.')
+        longnet_args['flash_attention'] = False
 
     print('dilated_ratio: ', dilated_ratio)
     print('segment_length: ', segment_length)

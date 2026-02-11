@@ -8,7 +8,7 @@ environment:
     GIGAPATH_OUTPUT_DIR: /Volumes/main/guanyu_chen/sgc/gigapath/outputs/PANDA
     GIGAPATH_EPOCHS: "5"
     # Empty => random init. Set to hf_hub:prov-gigapath/prov-gigapath to load pretrained.
-    GIGAPATH_PRETRAINED: ""
+    GIGAPATH_PRETRAINED: /Volumes/main/guanyu_chen/sgc/gigapath/model/slide_encoder.pth
   dependencies: dependencies.yaml
 compute:
   gpus: 6

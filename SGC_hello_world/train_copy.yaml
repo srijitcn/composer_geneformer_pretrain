@@ -1,0 +1,24 @@
+experiment_name: torchrun-hello-world
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 2
+  gpu_type: a10
+max_retries: 0
+command: |-
+  python - <<'PY'
+  import torch
+
+  print("torch", torch.__version__)
+  print("cuda", torch.version.cuda)
+  print("gpu", torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)
+
+  try:
+      import flash_attn
+      from flash_attn.flash_attn_interface import flash_attn_func
+      print("flash_attn OK", flash_attn.__version__, "flash_attn_func:", flash_attn_func is not None)
+  except Exception as e:
+      print("flash_attn import FAILED:", repr(e))
+  PY
