@@ -21,8 +21,10 @@ from utils import (get_optimizer, get_loss_function, \
 
 def train(dataloader, fold, args):
     train_loader, val_loader, test_loader = dataloader
-    # set up the writer
-    writer_dir = os.path.join(args.save_dir, f'fold_{fold}', 'tensorboard')
+    # TensorBoard event files need append support; UC volume paths can raise OSError(29).
+    # Keep checkpoints on args.save_dir, but write TensorBoard logs to local disk.
+    tb_root = os.environ.get("GIGAPATH_TENSORBOARD_DIR", "/tmp/gigapath_tensorboard")
+    writer_dir = os.path.join(tb_root, args.exp_code, f'fold_{fold}')
     if not os.path.isdir(writer_dir):
         os.makedirs(writer_dir, exist_ok=True)
 
