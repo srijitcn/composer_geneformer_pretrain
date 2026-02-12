@@ -45,6 +45,8 @@ def get_finetune_params():
     parser.add_argument('--drop_path_rate', type=float, default=0.1, help='Drop path rate')
     parser.add_argument('--val_r',          type=float, default=0.1, help='Ratio of data used for validation')
     parser.add_argument('--model_select',   type=str, default='last_epoch', help='Criteria for choosing the model checkpoint', choices=['val', 'last_epoch'])
+    parser.add_argument('--save_interval_epochs', type=int, default=5, help='Save training state every N epochs (<=0 disables periodic save)')
+    parser.add_argument('--autoresume',     type=int, default=1, help='Auto-resume from checkpoint_latest.pt if present (1=true, 0=false)')
     parser.add_argument('--save_dir',       type=str, default='', help='Save directory')
     parser.add_argument('--num_workers',    type=int, default=10, help='Number of workers')
     parser.add_argument('--report_to',      type=str, default='tensorboard', help='Logger used for recording', choices=['wandb', 'tensorboard'])

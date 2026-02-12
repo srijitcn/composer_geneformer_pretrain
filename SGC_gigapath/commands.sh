@@ -9,6 +9,8 @@ cd "$HOME/composer_geneformer_pretrain/SGC_gigapath"
 ROOT_PATH="${GIGAPATH_ROOT_PATH:-/Volumes/main/guanyu_chen/sgc/gigapath/data/GigaPath_PANDA_embeddings/h5_files}"
 OUTPUT_DIR="${GIGAPATH_OUTPUT_DIR:-outputs/PANDA}"
 EPOCHS="${GIGAPATH_EPOCHS:-5}"
+SAVE_INTERVAL_EPOCHS="${GIGAPATH_SAVE_INTERVAL_EPOCHS:-5}"
+AUTORESUME="${GIGAPATH_AUTORESUME:-1}"
 PRETRAINED="${GIGAPATH_PRETRAINED:-}"
 
 count_train_matches() {
@@ -67,6 +69,8 @@ fi
 echo ">>> ROOT_PATH=${ROOT_PATH}"
 echo ">>> OUTPUT_DIR=${OUTPUT_DIR}"
 echo ">>> EPOCHS=${EPOCHS}"
+echo ">>> SAVE_INTERVAL_EPOCHS=${SAVE_INTERVAL_EPOCHS}"
+echo ">>> AUTORESUME=${AUTORESUME}"
 if [[ -z "${PRETRAINED}" ]]; then
   echo ">>> PRETRAINED is empty: training with random initialization"
 else
@@ -80,6 +84,8 @@ python finetune/main.py \
   --root_path "${ROOT_PATH}" \
   --model_arch gigapath_slide_enc12l768d \
   --epochs "${EPOCHS}" \
+  --save_interval_epochs "${SAVE_INTERVAL_EPOCHS}" \
+  --autoresume "${AUTORESUME}" \
   --folds 1 \
   --save_dir "${OUTPUT_DIR}" \
   --report_to tensorboard \

@@ -1,5 +1,8 @@
 import os
 import sys
+import re
+import json
+import glob
 from pathlib import Path
 
 # For convinience
@@ -11,6 +14,10 @@ import wandb
 import torch
 import numpy as np
 import torch.utils.tensorboard as tensorboard
+try:
+    import mlflow
+except Exception:
+    mlflow = None
 
 from gigapath.classification_head import get_model
 from metrics import calculate_metrics_with_task_cfg
@@ -19,8 +26,98 @@ from utils import (get_optimizer, get_loss_function, \
                   log_writer, adjust_learning_rate)
 
 
+def _is_mlflow_enabled() -> bool:
+    flag = os.environ.get("GIGAPATH_ENABLE_MLFLOW", "true").strip().lower()
+    return flag in {"1", "true", "yes", "y", "on"}
+
+
+def _sanitize_mlflow_metrics(metrics: dict) -> dict:
+    out = {}
+    for k, v in metrics.items():
+        if 'prob' in k or 'label' in k:
+            continue
+        if isinstance(v, (int, float, np.floating, np.integer)):
+            out[k] = float(v)
+    return out
+
+
+def _checkpoint_epoch_from_filename(path: str):
+    match = re.search(r"checkpoint_epoch_(\d+)\.pt$", os.path.basename(path))
+    if not match:
+        return None
+    # Filename is 1-based epoch number; internal epoch is 0-based.
+    return int(match.group(1)) - 1
+
+
+def _checkpoint_epoch_from_file(path: str):
+    try:
+        ckpt = torch.load(path, map_location="cpu")
+        if isinstance(ckpt, dict) and "epoch" in ckpt:
+            return int(ckpt["epoch"])
+    except Exception:
+        pass
+    return _checkpoint_epoch_from_filename(path)
+
+
+def _write_checkpoint_index(index_path: str, latest_path: str, latest_epoch: int, all_epoch_ckpts: list):
+    payload = {
+        "latest_checkpoint": latest_path,
+        "latest_epoch_0_based": int(latest_epoch),
+        "latest_epoch_1_based": int(latest_epoch) + 1,
+        "epoch_checkpoints": sorted(all_epoch_ckpts),
+    }
+    with open(index_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+
+def _select_resume_checkpoint(model_dir: str):
+    latest_ckpt = os.path.join(model_dir, "checkpoint_latest.pt")
+    if os.path.exists(latest_ckpt):
+        return latest_ckpt
+
+    epoch_ckpts = glob.glob(os.path.join(model_dir, "checkpoint_epoch_*.pt"))
+    if not epoch_ckpts:
+        return None
+
+    best_path = None
+    best_epoch = -1
+    for ckpt_path in epoch_ckpts:
+        epoch = _checkpoint_epoch_from_file(ckpt_path)
+        if epoch is None:
+            continue
+        if epoch > best_epoch:
+            best_epoch = epoch
+            best_path = ckpt_path
+    return best_path
+
+
 def train(dataloader, fold, args):
     train_loader, val_loader, test_loader = dataloader
+    fold_save_dir = os.path.join(args.save_dir, f'fold_{fold}')
+    model_dir = os.path.join(args.save_dir, "model", f'fold_{fold}')
+    os.makedirs(model_dir, exist_ok=True)
+    checkpoint_index_path = os.path.join(model_dir, "checkpoint_index.json")
+
+    def save_training_state(epoch: int, filename: str):
+        ckpt_path = os.path.join(model_dir, filename)
+        state = {
+            "epoch": int(epoch),
+            "epoch_1_based": int(epoch) + 1,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scaler_state_dict": fp16_scaler.state_dict() if fp16_scaler is not None else None,
+            "args": vars(args),
+        }
+        torch.save(state, ckpt_path)
+        epoch_ckpts = glob.glob(os.path.join(model_dir, "checkpoint_epoch_*.pt"))
+        _write_checkpoint_index(
+            index_path=checkpoint_index_path,
+            latest_path=os.path.join(model_dir, "checkpoint_latest.pt"),
+            latest_epoch=epoch,
+            all_epoch_ckpts=epoch_ckpts,
+        )
+        print(f"Saved checkpoint from epoch {epoch + 1}: {ckpt_path}")
+
     # TensorBoard event files need append support; UC volume paths can raise OSError(29).
     # Keep checkpoints on args.save_dir, but write TensorBoard logs to local disk.
     tb_root = os.environ.get("GIGAPATH_TENSORBOARD_DIR", "/tmp/gigapath_tensorboard")
@@ -30,6 +127,32 @@ def train(dataloader, fold, args):
 
     # set up the writer
     writer = tensorboard.SummaryWriter(writer_dir, flush_secs=15)
+    mlflow_enabled = _is_mlflow_enabled() and (mlflow is not None)
+    mlflow_started_here = False
+    if mlflow_enabled:
+        try:
+            if mlflow.active_run() is None:
+                mlflow.start_run(run_name=args.exp_code)
+                mlflow_started_here = True
+            mlflow.log_params({
+                "exp_code": args.exp_code,
+                "task": args.task,
+                "epochs": int(args.epochs),
+                "save_interval_epochs": int(args.save_interval_epochs),
+                "autoresume": int(args.autoresume),
+                "batch_size": int(args.batch_size),
+                "gc": int(args.gc),
+                "lr_scheduler": str(args.lr_scheduler),
+                "blr": float(args.blr),
+                "optim": str(args.optim),
+                "optim_wd": float(args.optim_wd),
+                "root_path": str(args.root_path),
+                "save_dir": str(args.save_dir),
+                "report_to": str(args.report_to),
+            })
+        except Exception as e:
+            print(f"Warning: MLflow setup failed, continue without MLflow logging. Error: {e}")
+            mlflow_enabled = False
     # set up writer
     if "wandb" in args.report_to:
         wandb.init(
@@ -58,6 +181,26 @@ def train(dataloader, fold, args):
         fp16_scaler = torch.cuda.amp.GradScaler()
         print('Using fp16 training')
 
+    # Optional autoresume from latest checkpoint.
+    start_epoch = 0
+    resume_ckpt_path = _select_resume_checkpoint(model_dir) if int(args.autoresume) == 1 else None
+    if int(args.autoresume) == 1 and resume_ckpt_path is not None:
+        try:
+            ckpt = torch.load(resume_ckpt_path, map_location="cpu")
+            if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+                model.load_state_dict(ckpt["model_state_dict"])
+                if "optimizer_state_dict" in ckpt and ckpt["optimizer_state_dict"] is not None:
+                    optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+                if fp16_scaler is not None and ckpt.get("scaler_state_dict") is not None:
+                    fp16_scaler.load_state_dict(ckpt["scaler_state_dict"])
+                start_epoch = int(ckpt.get("epoch", -1)) + 1
+                print(f"Auto-resume: loaded {resume_ckpt_path}, restarting at epoch {start_epoch}")
+            else:
+                print(f"Auto-resume: checkpoint format not recognized at {resume_ckpt_path}, starting fresh")
+        except Exception as e:
+            print(f"Auto-resume failed to load {resume_ckpt_path}: {e}")
+            print("Starting training from epoch 0")
+
     print('Training on {} samples'.format(len(train_loader.dataset)))
     print('Validating on {} samples'.format(len(val_loader.dataset))) if val_loader is not None else None
     print('Testing on {} samples'.format(len(test_loader.dataset))) if test_loader is not None else None
@@ -68,7 +211,9 @@ def train(dataloader, fold, args):
 
     val_records, test_records = None, None
 
-    for i in range(args.epochs):
+    last_epoch_ran = start_epoch - 1
+    for i in range(start_epoch, args.epochs):
+        last_epoch_ran = i
         print('Epoch: {}'.format(i))
         train_records = train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, i, args)
 
@@ -79,22 +224,48 @@ def train(dataloader, fold, args):
             log_dict = {'train_' + k: v for k, v in train_records.items() if 'prob' not in k and 'label' not in k}
             log_dict.update({'val_' + k: v for k, v in val_records.items() if 'prob' not in k and 'label' not in k})
             log_writer(log_dict, i, args.report_to, writer)
+            if mlflow_enabled:
+                try:
+                    mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=i)
+                except Exception as e:
+                    print(f"Warning: MLflow metric logging failed at epoch {i}: {e}")
             # update the monitor scores
             scores = val_records['macro_auroc']
 
         if args.model_select == 'val' and val_loader is not None:
-            monitor(scores, model, ckpt_name=os.path.join(args.save_dir, 'fold_' + str(fold), "checkpoint.pt"))
+            monitor(scores, model, ckpt_name=os.path.join(model_dir, "checkpoint.pt"))
         elif args.model_select == 'last_epoch' and i == args.epochs - 1:
-            torch.save(model.state_dict(), os.path.join(args.save_dir, 'fold_' + str(fold), "checkpoint.pt"))
+            torch.save(model.state_dict(), os.path.join(model_dir, "checkpoint.pt"))
 
-    # load model for test
-    model.load_state_dict(torch.load(os.path.join(args.save_dir, 'fold_' + str(fold), "checkpoint.pt")))
+        # Always keep a rolling latest checkpoint for recovery/debug.
+        save_training_state(i, "checkpoint_latest.pt")
+        # Optional periodic checkpoints, e.g. every 5 epochs.
+        if int(args.save_interval_epochs) > 0 and ((i + 1) % int(args.save_interval_epochs) == 0):
+            save_training_state(i, f"checkpoint_epoch_{i+1}.pt")
+
+    # load model for test (prefer selected checkpoint if available).
+    selected_ckpt = os.path.join(model_dir, "checkpoint.pt")
+    if os.path.exists(selected_ckpt):
+        model.load_state_dict(torch.load(selected_ckpt))
+    else:
+        print(f"Selected checkpoint not found at {selected_ckpt}; evaluating current in-memory model.")
     # test the model
-    test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, i, args)
+    eval_epoch = max(last_epoch_ran, 0)
+    test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, eval_epoch, args)
     # update the writer for test
     log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
     log_writer(log_dict, fold, args.report_to, writer)
+    if mlflow_enabled:
+        try:
+            mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=int(args.epochs))
+        except Exception as e:
+            print(f"Warning: MLflow test metric logging failed: {e}")
     wandb.finish() if "wandb" in args.report_to else None
+    if mlflow_enabled and mlflow_started_here:
+        try:
+            mlflow.end_run()
+        except Exception:
+            pass
 
     return val_records, test_records
 
