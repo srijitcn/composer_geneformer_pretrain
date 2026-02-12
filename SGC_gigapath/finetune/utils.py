@@ -10,7 +10,7 @@ import torch.optim as optim
 from typing import List, Tuple
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, average_precision_score
-from torch.utils.data import DataLoader, Sampler, WeightedRandomSampler, RandomSampler, SequentialSampler, sampler
+from torch.utils.data import DataLoader, Sampler, WeightedRandomSampler, RandomSampler, SequentialSampler, sampler, DistributedSampler
 
 
 def save_obj(obj, name):
@@ -161,10 +161,20 @@ def get_splits(df: pd.DataFrame,
 
 def get_loader(train_dataset, val_dataset, test_dataset, 
                task_config, weighted_sample=False, 
-               batch_size=1, num_workers=10, seed=0, 
+               batch_size=1, num_workers=10, seed=0,
+               distributed=False, rank=0, world_size=1,
                **kwargs) -> Tuple[DataLoader, DataLoader, DataLoader]:
     '''Get the dataloader for the dataset.'''
-    if weighted_sample and not task_config.get('setting', 'multi_class') == 'multi_label':
+    if distributed:
+        train_sampler = DistributedSampler(
+            train_dataset,
+            num_replicas=world_size,
+            rank=rank,
+            shuffle=True,
+            seed=seed,
+            drop_last=False,
+        )
+    elif weighted_sample and not task_config.get('setting', 'multi_class') == 'multi_label':
         # get the weights for each class, we only do this for multi-class classification
         N = len(train_dataset)
         weights = {}

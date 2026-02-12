@@ -14,6 +14,8 @@ import wandb
 import torch
 import numpy as np
 import torch.utils.tensorboard as tensorboard
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 try:
     import mlflow
 except Exception:
@@ -93,17 +95,22 @@ def _select_resume_checkpoint(model_dir: str):
 
 def train(dataloader, fold, args):
     train_loader, val_loader, test_loader = dataloader
+    is_main = getattr(args, "is_main_process", True)
+    distributed = getattr(args, "distributed", False)
     fold_save_dir = os.path.join(args.save_dir, f'fold_{fold}')
     model_dir = os.path.join(args.save_dir, "model", f'fold_{fold}')
     os.makedirs(model_dir, exist_ok=True)
     checkpoint_index_path = os.path.join(model_dir, "checkpoint_index.json")
 
     def save_training_state(epoch: int, filename: str):
+        if not is_main:
+            return
         ckpt_path = os.path.join(model_dir, filename)
+        model_to_save = model.module if hasattr(model, "module") else model
         state = {
             "epoch": int(epoch),
             "epoch_1_based": int(epoch) + 1,
-            "model_state_dict": model.state_dict(),
+            "model_state_dict": model_to_save.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "scaler_state_dict": fp16_scaler.state_dict() if fp16_scaler is not None else None,
             "args": vars(args),
@@ -126,8 +133,8 @@ def train(dataloader, fold, args):
         os.makedirs(writer_dir, exist_ok=True)
 
     # set up the writer
-    writer = tensorboard.SummaryWriter(writer_dir, flush_secs=15)
-    mlflow_enabled = _is_mlflow_enabled() and (mlflow is not None)
+    writer = tensorboard.SummaryWriter(writer_dir, flush_secs=15) if is_main else None
+    mlflow_enabled = is_main and _is_mlflow_enabled() and (mlflow is not None)
     mlflow_started_here = False
     if mlflow_enabled:
         try:
@@ -154,7 +161,7 @@ def train(dataloader, fold, args):
             print(f"Warning: MLflow setup failed, continue without MLflow logging. Error: {e}")
             mlflow_enabled = False
     # set up writer
-    if "wandb" in args.report_to:
+    if is_main and "wandb" in args.report_to:
         wandb.init(
             project=args.exp_code,
             name=args.exp_code + '_fold_' + str(fold),
@@ -163,12 +170,14 @@ def train(dataloader, fold, args):
             config=vars(args),
         )
         writer = wandb
-    elif "tensorboard" in args.report_to:
+    elif is_main and "tensorboard" in args.report_to:
         writer = tensorboard.SummaryWriter(writer_dir, flush_secs=15)
 
     # set up the model
     model = get_model(**vars(args))
     model = model.to(args.device)
+    if distributed:
+        model = DDP(model, device_ids=[args.local_rank], output_device=args.local_rank)
     # set up the optimizer
     optimizer = get_optimizer(args, model)
     # set up the loss function
@@ -188,7 +197,10 @@ def train(dataloader, fold, args):
         try:
             ckpt = torch.load(resume_ckpt_path, map_location="cpu")
             if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
-                model.load_state_dict(ckpt["model_state_dict"])
+                if hasattr(model, "module"):
+                    model.module.load_state_dict(ckpt["model_state_dict"])
+                else:
+                    model.load_state_dict(ckpt["model_state_dict"])
                 if "optimizer_state_dict" in ckpt and ckpt["optimizer_state_dict"] is not None:
                     optimizer.load_state_dict(ckpt["optimizer_state_dict"])
                 if fp16_scaler is not None and ckpt.get("scaler_state_dict") is not None:
@@ -201,10 +213,11 @@ def train(dataloader, fold, args):
             print(f"Auto-resume failed to load {resume_ckpt_path}: {e}")
             print("Starting training from epoch 0")
 
-    print('Training on {} samples'.format(len(train_loader.dataset)))
-    print('Validating on {} samples'.format(len(val_loader.dataset))) if val_loader is not None else None
-    print('Testing on {} samples'.format(len(test_loader.dataset))) if test_loader is not None else None
-    print('Training starts!')
+    if is_main:
+        print('Training on {} samples'.format(len(train_loader.dataset)))
+        print('Validating on {} samples'.format(len(val_loader.dataset))) if val_loader is not None else None
+        print('Testing on {} samples'.format(len(test_loader.dataset))) if test_loader is not None else None
+        print('Training starts!')
 
     # test evaluate function
     # val_records = evaluate(val_loader, model, fp16_scaler, loss_fn, 0, args)
@@ -214,7 +227,10 @@ def train(dataloader, fold, args):
     last_epoch_ran = start_epoch - 1
     for i in range(start_epoch, args.epochs):
         last_epoch_ran = i
-        print('Epoch: {}'.format(i))
+        if distributed and hasattr(train_loader.sampler, "set_epoch"):
+            train_loader.sampler.set_epoch(i)
+        if is_main:
+            print('Epoch: {}'.format(i))
         train_records = train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, i, args)
 
         if val_loader is not None:
@@ -233,34 +249,42 @@ def train(dataloader, fold, args):
             scores = val_records['macro_auroc']
 
         if args.model_select == 'val' and val_loader is not None:
-            monitor(scores, model, ckpt_name=os.path.join(model_dir, "checkpoint.pt"))
+            model_to_save = model.module if hasattr(model, "module") else model
+            monitor(scores, model_to_save, ckpt_name=os.path.join(model_dir, "checkpoint.pt"))
         elif args.model_select == 'last_epoch' and i == args.epochs - 1:
-            torch.save(model.state_dict(), os.path.join(model_dir, "checkpoint.pt"))
+            if is_main:
+                model_to_save = model.module if hasattr(model, "module") else model
+                torch.save(model_to_save.state_dict(), os.path.join(model_dir, "checkpoint.pt"))
 
         # Always keep a rolling latest checkpoint for recovery/debug.
         save_training_state(i, "checkpoint_latest.pt")
         # Optional periodic checkpoints, e.g. every 5 epochs.
         if int(args.save_interval_epochs) > 0 and ((i + 1) % int(args.save_interval_epochs) == 0):
             save_training_state(i, f"checkpoint_epoch_{i+1}.pt")
+        if distributed:
+            dist.barrier()
 
     # load model for test (prefer selected checkpoint if available).
     selected_ckpt = os.path.join(model_dir, "checkpoint.pt")
     if os.path.exists(selected_ckpt):
-        model.load_state_dict(torch.load(selected_ckpt))
-    else:
+        model_to_load = model.module if hasattr(model, "module") else model
+        model_to_load.load_state_dict(torch.load(selected_ckpt))
+    elif is_main:
         print(f"Selected checkpoint not found at {selected_ckpt}; evaluating current in-memory model.")
     # test the model
     eval_epoch = max(last_epoch_ran, 0)
-    test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, eval_epoch, args)
+    test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, eval_epoch, args) if test_loader is not None else None
     # update the writer for test
-    log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
-    log_writer(log_dict, fold, args.report_to, writer)
-    if mlflow_enabled:
-        try:
-            mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=int(args.epochs))
-        except Exception as e:
-            print(f"Warning: MLflow test metric logging failed: {e}")
-    wandb.finish() if "wandb" in args.report_to else None
+    if test_records is not None:
+        log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
+        log_writer(log_dict, fold, args.report_to, writer)
+        if mlflow_enabled:
+            try:
+                mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=int(args.epochs))
+            except Exception as e:
+                print(f"Warning: MLflow test metric logging failed: {e}")
+    if is_main and "wandb" in args.report_to:
+        wandb.finish()
     if mlflow_enabled and mlflow_started_here:
         try:
             mlflow.end_run()
@@ -325,14 +349,15 @@ def train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, epoch,
         # update the records
         records['loss'] += loss.item() * args.gc
 
-        if (batch_idx + 1) % 20 == 0:
+        if (batch_idx + 1) % 20 == 0 and getattr(args, "is_main_process", True):
             time_per_it = (time.time() - start_time) / (batch_idx + 1)
             print('Epoch: {}, Batch: {}, Loss: {:.4f}, LR: {:.4f}, Time: {:.4f} sec/it, Seq len: {:.1f}, Slide ID: {}' \
                   .format(epoch, batch_idx, records['loss']/batch_idx, optimizer.param_groups[0]['lr'], time_per_it, \
                           seq_len/(batch_idx+1), batch['slide_id'][-1] if 'slide_id' in batch else 'None'))
 
     records['loss'] = records['loss'] / len(train_loader)
-    print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss))
+    if getattr(args, "is_main_process", True):
+        print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss))
     return records
 
 

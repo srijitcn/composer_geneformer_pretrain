@@ -9,6 +9,8 @@ environment:
     GIGAPATH_EPOCHS: "10"
     GIGAPATH_SAVE_INTERVAL_EPOCHS: "5"
     GIGAPATH_AUTORESUME: "1"
+    GIGAPATH_NNODES: "2"
+    GIGAPATH_NPROC_PER_NODE: "8"
     # Empty => random init. Set to hf_hub:prov-gigapath/prov-gigapath to load pretrained.
     GIGAPATH_PRETRAINED: /Volumes/main/guanyu_chen/sgc/gigapath/model/slide_encoder.pth
   dependencies: dependencies.yaml

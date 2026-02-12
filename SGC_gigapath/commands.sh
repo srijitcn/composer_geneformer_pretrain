@@ -12,6 +12,8 @@ EPOCHS="${GIGAPATH_EPOCHS:-5}"
 SAVE_INTERVAL_EPOCHS="${GIGAPATH_SAVE_INTERVAL_EPOCHS:-5}"
 AUTORESUME="${GIGAPATH_AUTORESUME:-1}"
 PRETRAINED="${GIGAPATH_PRETRAINED:-}"
+NNODES="${GIGAPATH_NNODES:-2}"
+NPROC_PER_NODE="${GIGAPATH_NPROC_PER_NODE:-8}"
 
 count_train_matches() {
   local candidate_root="$1"
@@ -71,13 +73,21 @@ echo ">>> OUTPUT_DIR=${OUTPUT_DIR}"
 echo ">>> EPOCHS=${EPOCHS}"
 echo ">>> SAVE_INTERVAL_EPOCHS=${SAVE_INTERVAL_EPOCHS}"
 echo ">>> AUTORESUME=${AUTORESUME}"
+echo ">>> NNODES=${NNODES}"
+echo ">>> NPROC_PER_NODE=${NPROC_PER_NODE}"
 if [[ -z "${PRETRAINED}" ]]; then
   echo ">>> PRETRAINED is empty: training with random initialization"
 else
   echo ">>> PRETRAINED=${PRETRAINED}"
 fi
 
-python finetune/main.py \
+torchrun \
+  --nnodes "${NNODES}" \
+  --nproc_per_node "${NPROC_PER_NODE}" \
+  --node_rank "${NODE_RANK:-0}" \
+  --master_addr "${MASTER_ADDR:-127.0.0.1}" \
+  --master_port "${MASTER_PORT:-29500}" \
+  finetune/main.py \
   --task_cfg_path finetune/task_configs/panda.yaml \
   --dataset_csv dataset_csv/PANDA/PANDA.csv \
   --pre_split_dir dataset_csv/PANDA \
