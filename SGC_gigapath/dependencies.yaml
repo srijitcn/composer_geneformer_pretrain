@@ -5,7 +5,6 @@ dependencies:
   - fvcore
   - iopath
   # - xformers>=0.0.20
-  - xformers>=0.0.31
   - huggingface-hub==0.20.2
   - h5py
   - numpy
@@ -26,3 +25,5 @@ dependencies:
   - ninja==1.11.1.1
   - transformers==4.36.2
   - pyyaml
+  - xformers==0.0.31
+  - flash-attn==2.8.2
