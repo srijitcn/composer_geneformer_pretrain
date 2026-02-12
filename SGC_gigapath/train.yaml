@@ -6,17 +6,15 @@ environment:
     # HF_TOKEN: "<your_hf_token>"
     GIGAPATH_ROOT_PATH: /Volumes/main/guanyu_chen/sgc/gigapath/data/dinov2_features/GigaPath_PANDA_embeddings/h5_files
     GIGAPATH_OUTPUT_DIR: /Volumes/main/guanyu_chen/sgc/gigapath/outputs/
-    GIGAPATH_EPOCHS: "20"
+    GIGAPATH_EPOCHS: "10"
     GIGAPATH_SAVE_INTERVAL_EPOCHS: "5"
     GIGAPATH_AUTORESUME: "1"
-    GIGAPATH_NNODES: "2"
-    GIGAPATH_NPROC_PER_NODE: "8"
     # Empty => random init. Set to hf_hub:prov-gigapath/prov-gigapath to load pretrained.
     GIGAPATH_PRETRAINED: /Volumes/main/guanyu_chen/sgc/gigapath/model/slide_encoder.pth
   dependencies: dependencies.yaml
 compute:
-  gpus: 16
-  gpu_type: h100
+  gpus: 8
+  gpu_type: a10
 max_retries: 0
 code_source:
   type: snapshot
