@@ -77,14 +77,37 @@ else
   echo ">>> PRETRAINED=${PRETRAINED}"
 fi
 
-echo ">>> CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-<not set>}"
-echo ">>> nvidia-smi GPU list:"
-nvidia-smi -L 2>/dev/null || echo ">>> nvidia-smi not available"
-NGPUS=$(python -c "import torch; print(torch.cuda.device_count() or 1)")
-echo ">>> torch.cuda.device_count() = ${NGPUS}"
-echo ">>> Environment distributed vars: WORLD_SIZE=${WORLD_SIZE:-<not set>} RANK=${RANK:-<not set>} LOCAL_RANK=${LOCAL_RANK:-<not set>} MASTER_ADDR=${MASTER_ADDR:-<not set>} MASTER_PORT=${MASTER_PORT:-<not set>}"
+GPUS_PER_NODE=$(python -c "import torch; print(torch.cuda.device_count() or 1)")
 
-torchrun --nproc_per_node="${NGPUS}" finetune/main.py \
+# Multi-node: use platform-provided env vars (set by SGC)
+NODE_RANK="${NODE_RANK:-0}"
+MASTER_ADDR="${MASTER_ADDR:-localhost}"
+MASTER_PORT="${MASTER_PORT:-29500}"
+
+# Auto-detect number of nodes from available env vars
+if [[ -n "${NNODES:-}" ]]; then
+  NUM_NODES="${NNODES}"
+elif [[ -n "${NUM_NODES:-}" ]]; then
+  NUM_NODES="${NUM_NODES}"
+elif [[ -n "${WORLD_SIZE:-}" ]] && [[ "${GPUS_PER_NODE}" -gt 0 ]]; then
+  NUM_NODES=$(( WORLD_SIZE / GPUS_PER_NODE ))
+else
+  NUM_NODES=1
+fi
+if [[ "${NUM_NODES}" -lt 1 ]]; then
+  NUM_NODES=1
+fi
+
+echo ">>> ${NUM_NODES} node(s), ${GPUS_PER_NODE} GPU(s)/node, node_rank=${NODE_RANK}"
+echo ">>> master_addr=${MASTER_ADDR}, master_port=${MASTER_PORT}"
+
+torchrun \
+  --nnodes="${NUM_NODES}" \
+  --node_rank="${NODE_RANK}" \
+  --nproc_per_node="${GPUS_PER_NODE}" \
+  --master_addr="${MASTER_ADDR}" \
+  --master_port="${MASTER_PORT}" \
+  finetune/main.py \
   --task_cfg_path finetune/task_configs/panda.yaml \
   --dataset_csv dataset_csv/PANDA/PANDA.csv \
   --pre_split_dir dataset_csv/PANDA \

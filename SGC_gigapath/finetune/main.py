@@ -22,12 +22,13 @@ if __name__ == '__main__':
         dist.init_process_group(backend="nccl")
         torch.cuda.set_device(args.local_rank)
 
-    print(f"[Rank {args.rank}/{args.world_size}] local_rank={args.local_rank}, "
-          f"device=cuda:{args.local_rank}, "
-          f"cuda_device_count={torch.cuda.device_count()}")
+    node_rank = int(os.environ.get("GROUP_RANK", os.environ.get("NODE_RANK", 0)))
+    print(f"[rank {args.rank}/{args.world_size}] node{node_rank} gpu{args.local_rank} ready "
+          f"– device={torch.device(f'cuda:{args.local_rank}')}, "
+          f"cuda_visible={os.environ.get('CUDA_VISIBLE_DEVICES', 'all')}")
+
     if args.rank == 0:
-        print(f">>> DDP status: {'ENABLED (world_size=' + str(args.world_size) + ')' if args.world_size > 1 else 'DISABLED (single GPU)'}")
-    print(args)
+        print(args)
 
     # set the device
     device = torch.device(f"cuda:{args.local_rank}" if torch.cuda.is_available() else "cpu")
