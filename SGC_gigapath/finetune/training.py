@@ -4,6 +4,7 @@ import re
 import json
 import glob
 from pathlib import Path
+from contextlib import nullcontext
 
 # For convinience
 this_file_dir = Path(__file__).resolve().parent
@@ -12,6 +13,8 @@ sys.path.append(str(this_file_dir.parent))
 import time
 import wandb
 import torch
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 import numpy as np
 import torch.utils.tensorboard as tensorboard
 try:
@@ -157,7 +160,7 @@ def train(dataloader, fold, args):
         state = {
             "epoch": int(epoch),
             "epoch_1_based": int(epoch) + 1,
-            "model_state_dict": model.state_dict(),
+            "model_state_dict": raw_model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "scaler_state_dict": fp16_scaler.state_dict() if fp16_scaler is not None else None,
             "args": vars(args),
@@ -257,10 +260,17 @@ def train(dataloader, fold, args):
             print(f"Auto-resume failed to load {resume_ckpt_path}: {e}")
             print("Starting training from epoch 0")
 
-    print('Training on {} samples'.format(len(train_loader.dataset)))
-    print('Validating on {} samples'.format(len(val_loader.dataset))) if val_loader is not None else None
-    print('Testing on {} samples'.format(len(test_loader.dataset))) if test_loader is not None else None
-    print('Training starts!')
+    # Wrap model with DDP for multi-GPU training
+    if getattr(args, 'world_size', 1) > 1:
+        model = DDP(model, device_ids=[args.local_rank], find_unused_parameters=True)
+    raw_model = model.module if hasattr(model, 'module') else model
+    is_main = getattr(args, 'rank', 0) == 0
+
+    if is_main:
+        print('Training on {} samples'.format(len(train_loader.dataset)))
+        print('Validating on {} samples'.format(len(val_loader.dataset))) if val_loader is not None else None
+        print('Testing on {} samples'.format(len(test_loader.dataset))) if test_loader is not None else None
+        print('Training starts!')
 
     # test evaluate function
     # val_records = evaluate(val_loader, model, fp16_scaler, loss_fn, 0, args)
@@ -270,125 +280,116 @@ def train(dataloader, fold, args):
     last_epoch_ran = start_epoch - 1
     for i in range(start_epoch, args.epochs):
         last_epoch_ran = i
-        print('Epoch: {}'.format(i))
+        if hasattr(train_loader.sampler, 'set_epoch'):
+            train_loader.sampler.set_epoch(i)
+        if is_main:
+            print('Epoch: {}'.format(i))
         train_records = train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, i, args)
 
-        if val_loader is not None:
-            val_records = evaluate(val_loader, model, fp16_scaler, loss_fn, i, args)
+        if is_main:
+            if val_loader is not None:
+                val_records = evaluate(val_loader, model, fp16_scaler, loss_fn, i, args)
 
-            # update the writer for train and val
-            log_dict = {'train_' + k: v for k, v in train_records.items() if 'prob' not in k and 'label' not in k}
-            log_dict.update({'val_' + k: v for k, v in val_records.items() if 'prob' not in k and 'label' not in k})
-            log_writer(log_dict, i, args.report_to, writer)
-            if mlflow_enabled:
-                try:
-                    mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=i)
-                except Exception as e:
-                    print(f"Warning: MLflow metric logging failed at epoch {i}: {e}")
-            # update the monitor scores
-            scores = val_records['macro_auroc']
+                log_dict = {'train_' + k: v for k, v in train_records.items() if 'prob' not in k and 'label' not in k}
+                log_dict.update({'val_' + k: v for k, v in val_records.items() if 'prob' not in k and 'label' not in k})
+                log_writer(log_dict, i, args.report_to, writer)
+                if mlflow_enabled:
+                    try:
+                        mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=i)
+                    except Exception as e:
+                        print(f"Warning: MLflow metric logging failed at epoch {i}: {e}")
+                scores = val_records['macro_auroc']
 
-        if args.model_select == 'val' and val_loader is not None:
-            monitor(scores, model, ckpt_name=os.path.join(model_dir, "checkpoint.pt"))
-        elif args.model_select == 'last_epoch' and i == args.epochs - 1:
-            torch.save(model.state_dict(), os.path.join(model_dir, "checkpoint.pt"))
+            if args.model_select == 'val' and val_loader is not None:
+                monitor(scores, raw_model, ckpt_name=os.path.join(model_dir, "checkpoint.pt"))
+            elif args.model_select == 'last_epoch' and i == args.epochs - 1:
+                torch.save(raw_model.state_dict(), os.path.join(model_dir, "checkpoint.pt"))
 
-        # Always keep a rolling latest checkpoint for recovery/debug.
-        save_training_state(i, "checkpoint_latest.pt")
-        # Optional periodic checkpoints, e.g. every 5 epochs.
-        if int(args.save_interval_epochs) > 0 and ((i + 1) % int(args.save_interval_epochs) == 0):
-            save_training_state(i, f"checkpoint_epoch_{i+1}.pt")
+            save_training_state(i, "checkpoint_latest.pt")
+            if int(args.save_interval_epochs) > 0 and ((i + 1) % int(args.save_interval_epochs) == 0):
+                save_training_state(i, f"checkpoint_epoch_{i+1}.pt")
 
-    # load model for test (prefer selected checkpoint if available).
-    selected_ckpt = os.path.join(model_dir, "checkpoint.pt")
-    if os.path.exists(selected_ckpt):
-        model.load_state_dict(torch.load(selected_ckpt))
-    else:
-        print(f"Selected checkpoint not found at {selected_ckpt}; evaluating current in-memory model.")
-    # test the model
-    eval_epoch = max(last_epoch_ran, 0)
-    test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, eval_epoch, args)
-    # update the writer for test
-    log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
-    log_writer(log_dict, fold, args.report_to, writer)
-    if mlflow_enabled:
-        try:
-            mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=int(args.epochs))
-        except Exception as e:
-            print(f"Warning: MLflow test metric logging failed: {e}")
-    wandb.finish() if "wandb" in args.report_to else None
-    if mlflow_enabled and mlflow_started_here:
-        try:
-            mlflow.end_run()
-        except Exception:
-            pass
+    if is_main:
+        selected_ckpt = os.path.join(model_dir, "checkpoint.pt")
+        if os.path.exists(selected_ckpt):
+            raw_model.load_state_dict(torch.load(selected_ckpt))
+        else:
+            print(f"Selected checkpoint not found at {selected_ckpt}; evaluating current in-memory model.")
+        eval_epoch = max(last_epoch_ran, 0)
+        test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, eval_epoch, args)
+        log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
+        log_writer(log_dict, fold, args.report_to, writer)
+        if mlflow_enabled:
+            try:
+                mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=int(args.epochs))
+            except Exception as e:
+                print(f"Warning: MLflow test metric logging failed: {e}")
+        wandb.finish() if "wandb" in args.report_to else None
+        if mlflow_enabled and mlflow_started_here:
+            try:
+                mlflow.end_run()
+            except Exception:
+                pass
 
     return val_records, test_records
 
 
 def train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, epoch, args):
     model.train()
-    # set the start time
     start_time = time.time()
-
-    # monitoring sequence length
     seq_len = 0
-
-    # setup the records
     records = get_records_array(len(train_loader), args.n_classes)
+    is_main = getattr(args, 'rank', 0) == 0
+    use_ddp_sync = getattr(args, 'world_size', 1) > 1
 
     for batch_idx, batch in enumerate(train_loader):
-        # we use a per iteration lr scheduler
         if batch_idx % args.gc == 0 and args.lr_scheduler == 'cosine':
             adjust_learning_rate(optimizer, batch_idx / len(train_loader) + epoch, args)
 
-        # load the batch and transform this batch
         images, img_coords, label = batch['imgs'], batch['coords'], batch['labels']
         images = images.to(args.device, non_blocking=True)
         img_coords = img_coords.to(args.device, non_blocking=True)
         label = label.to(args.device, non_blocking=True).long()
-
-        # add the sequence length
         seq_len += images.shape[1]
 
         with torch.cuda.amp.autocast(dtype=torch.float16 if args.fp16 else torch.float32):
-
-            # get the logits
             logits = model(images, img_coords)
-            # get the loss
             if isinstance(loss_fn, torch.nn.BCEWithLogitsLoss):
                 label = label.squeeze(-1).float()
             else:
                 label = label.squeeze(-1).long()
-
             loss = loss_fn(logits, label)
             loss /= args.gc
 
+        # Skip gradient sync on accumulation steps for efficiency
+        is_accumulating = (batch_idx + 1) % args.gc != 0
+        sync_ctx = model.no_sync if (use_ddp_sync and is_accumulating) else nullcontext
+        with sync_ctx():
             if fp16_scaler is None:
                 loss.backward()
-                # update the parameters with gradient accumulation
-                if (batch_idx + 1) % args.gc == 0:
-                    optimizer.step()
-                    optimizer.zero_grad()
             else:
                 fp16_scaler.scale(loss).backward()
-                # update the parameters with gradient accumulation
-                if (batch_idx + 1) % args.gc == 0:
-                    fp16_scaler.step(optimizer)
-                    fp16_scaler.update()
-                    optimizer.zero_grad()
 
-        # update the records
+        if not is_accumulating:
+            if fp16_scaler is None:
+                optimizer.step()
+                optimizer.zero_grad()
+            else:
+                fp16_scaler.step(optimizer)
+                fp16_scaler.update()
+                optimizer.zero_grad()
+
         records['loss'] += loss.item() * args.gc
 
-        if (batch_idx + 1) % 20 == 0:
+        if is_main and (batch_idx + 1) % 20 == 0:
             time_per_it = (time.time() - start_time) / (batch_idx + 1)
             print('Epoch: {}, Batch: {}, Loss: {:.4f}, LR: {:.4f}, Time: {:.4f} sec/it, Seq len: {:.1f}, Slide ID: {}' \
                   .format(epoch, batch_idx, records['loss']/batch_idx, optimizer.param_groups[0]['lr'], time_per_it, \
                           seq_len/(batch_idx+1), batch['slide_id'][-1] if 'slide_id' in batch else 'None'))
 
     records['loss'] = records['loss'] / len(train_loader)
-    print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss))
+    if is_main:
+        print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss))
     return records
 
 

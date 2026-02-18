@@ -13,8 +13,8 @@ environment:
     GIGAPATH_PRETRAINED: /Volumes/main/guanyu_chen/sgc/gigapath/model/slide_encoder.pth
   dependencies: dependencies.yaml
 compute:
-  gpus: 8
-  gpu_type: a10
+  gpus: 16
+  gpu_type: h100
 max_retries: 0
 code_source:
   type: snapshot

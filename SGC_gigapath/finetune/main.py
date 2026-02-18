@@ -1,5 +1,6 @@
 import os
 import torch
+import torch.distributed as dist
 import pandas as pd
 import numpy as np
 
@@ -12,10 +13,19 @@ from datasets.slide_datatset import SlideDataset
 
 if __name__ == '__main__':
     args = get_finetune_params()
+
+    # Distributed training setup
+    args.local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    args.rank = int(os.environ.get("RANK", 0))
+    args.world_size = int(os.environ.get("WORLD_SIZE", 1))
+    if args.world_size > 1:
+        dist.init_process_group(backend="nccl")
+        torch.cuda.set_device(args.local_rank)
+
     print(args)
 
     # set the device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{args.local_rank}" if torch.cuda.is_available() else "cpu")
     args.device = device
 
     # set the random seed
@@ -36,7 +46,7 @@ if __name__ == '__main__':
     print('Setting save directory: {}'.format(args.save_dir))
 
     # set the learning rate
-    eff_batch_size = args.batch_size * args.gc
+    eff_batch_size = args.batch_size * args.gc * args.world_size
     if args.lr is None or args.lr < 0:  # only base_lr is specified
         args.lr = args.blr * eff_batch_size / 256
     print("base lr: %.2e" % (args.lr * 256 / eff_batch_size))
@@ -80,23 +90,25 @@ if __name__ == '__main__':
         # start training
         val_records, test_records = train((train_loader, val_loader, test_loader), fold, args)
 
-        # update the results
-        records = {'val': val_records, 'test': test_records}
-        for record_ in records:
-            for key in records[record_]:
-                if 'prob' in key or 'label' in key:
-                    continue
-                key_ = record_ + '_' + key
-                if key_ not in results:
-                    results[key_] = []
-                results[key_].append(records[record_][key])
+        if args.rank == 0:
+            records = {'val': val_records, 'test': test_records}
+            for record_ in records:
+                for key in records[record_]:
+                    if 'prob' in key or 'label' in key:
+                        continue
+                    key_ = record_ + '_' + key
+                    if key_ not in results:
+                        results[key_] = []
+                    results[key_].append(records[record_][key])
 
-    # save the results into a csv file
-    results_df = pd.DataFrame(results)
-    results_df.to_csv(os.path.join(args.save_dir, 'summary.csv'), index=False)
+    if args.rank == 0:
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(os.path.join(args.save_dir, 'summary.csv'), index=False)
 
-    # print the results, mean and std
-    for key in results_df.columns:
-        print('{}: {:.4f} +- {:.4f}'.format(key, np.mean(results_df[key]), np.std(results_df[key])))
-    print('Results saved in: {}'.format(os.path.join(args.save_dir, 'summary.csv')))
-    print('Done!')
+        for key in results_df.columns:
+            print('{}: {:.4f} +- {:.4f}'.format(key, np.mean(results_df[key]), np.std(results_df[key])))
+        print('Results saved in: {}'.format(os.path.join(args.save_dir, 'summary.csv')))
+        print('Done!')
+
+    if args.world_size > 1:
+        dist.destroy_process_group()

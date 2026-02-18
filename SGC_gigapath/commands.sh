@@ -77,7 +77,10 @@ else
   echo ">>> PRETRAINED=${PRETRAINED}"
 fi
 
-python finetune/main.py \
+NGPUS=$(python -c "import torch; print(torch.cuda.device_count() or 1)")
+echo ">>> Detected ${NGPUS} GPU(s), launching with torchrun"
+
+torchrun --nproc_per_node="${NGPUS}" finetune/main.py \
   --task_cfg_path finetune/task_configs/panda.yaml \
   --dataset_csv dataset_csv/PANDA/PANDA.csv \
   --pre_split_dir dataset_csv/PANDA \
