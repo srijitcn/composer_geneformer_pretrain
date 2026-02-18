@@ -77,8 +77,12 @@ else
   echo ">>> PRETRAINED=${PRETRAINED}"
 fi
 
+echo ">>> CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-<not set>}"
+echo ">>> nvidia-smi GPU list:"
+nvidia-smi -L 2>/dev/null || echo ">>> nvidia-smi not available"
 NGPUS=$(python -c "import torch; print(torch.cuda.device_count() or 1)")
-echo ">>> Detected ${NGPUS} GPU(s), launching with torchrun"
+echo ">>> torch.cuda.device_count() = ${NGPUS}"
+echo ">>> Environment distributed vars: WORLD_SIZE=${WORLD_SIZE:-<not set>} RANK=${RANK:-<not set>} LOCAL_RANK=${LOCAL_RANK:-<not set>} MASTER_ADDR=${MASTER_ADDR:-<not set>} MASTER_PORT=${MASTER_PORT:-<not set>}"
 
 torchrun --nproc_per_node="${NGPUS}" finetune/main.py \
   --task_cfg_path finetune/task_configs/panda.yaml \

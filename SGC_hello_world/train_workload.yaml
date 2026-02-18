@@ -11,7 +11,7 @@ code_source:
   type: snapshot
   snapshot:
     # repo_path is local path for your repo, and changes git commit is required for job submission
-    repo_path: /Users/srijit.nair/Projects/sgcli/composer_geneformer_pretrain/
+    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
 command: |-
   echo ">>> In SGC_hello_world folder, starting training"
   
