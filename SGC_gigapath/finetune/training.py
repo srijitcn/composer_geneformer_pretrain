@@ -31,6 +31,31 @@ def _is_mlflow_enabled() -> bool:
     return flag in {"1", "true", "yes", "y", "on"}
 
 
+def _is_primary_process() -> bool:
+    """
+    Return True only for global rank 0 so MLflow logging is not duplicated
+    across nodes/processes.
+    """
+    # If torch.distributed is initialized, trust it first.
+    try:
+        if torch.distributed.is_available() and torch.distributed.is_initialized():
+            return torch.distributed.get_rank() == 0
+    except Exception:
+        pass
+
+    # Fallback to common launcher env vars.
+    for key in ("RANK", "WORLD_RANK", "NODE_RANK"):
+        value = os.environ.get(key)
+        if value is not None:
+            try:
+                return int(value) == 0
+            except ValueError:
+                continue
+
+    # Default single-process behavior.
+    return True
+
+
 def _setup_mlflow(args):
     """
     Prefer the active SGC-provided MLflow run context.
@@ -156,9 +181,11 @@ def train(dataloader, fold, args):
 
     # set up the writer
     writer = tensorboard.SummaryWriter(writer_dir, flush_secs=15)
-    mlflow_enabled = _is_mlflow_enabled() and (mlflow is not None)
+    mlflow_enabled = _is_mlflow_enabled() and (mlflow is not None) and _is_primary_process()
     mlflow_started_here = False
     mlflow_run_id = None
+    if _is_mlflow_enabled() and (mlflow is not None) and not mlflow_enabled:
+        print("MLflow logging disabled on non-primary process to avoid duplicate metrics.")
     if mlflow_enabled:
         try:
             mlflow_enabled, mlflow_started_here, mlflow_run_id = _setup_mlflow(args)
