@@ -288,7 +288,7 @@ def train(dataloader, fold, args):
 
         if is_main:
             if val_loader is not None:
-                val_records = evaluate(val_loader, model, fp16_scaler, loss_fn, i, args)
+                val_records = evaluate(val_loader, raw_model, fp16_scaler, loss_fn, i, args)
 
                 log_dict = {'train_' + k: v for k, v in train_records.items() if 'prob' not in k and 'label' not in k}
                 log_dict.update({'val_' + k: v for k, v in val_records.items() if 'prob' not in k and 'label' not in k})
@@ -316,7 +316,7 @@ def train(dataloader, fold, args):
         else:
             print(f"Selected checkpoint not found at {selected_ckpt}; evaluating current in-memory model.")
         eval_epoch = max(last_epoch_ran, 0)
-        test_records = evaluate(test_loader, model, fp16_scaler, loss_fn, eval_epoch, args)
+        test_records = evaluate(test_loader, raw_model, fp16_scaler, loss_fn, eval_epoch, args)
         log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
         log_writer(log_dict, fold, args.report_to, writer)
         if mlflow_enabled:
