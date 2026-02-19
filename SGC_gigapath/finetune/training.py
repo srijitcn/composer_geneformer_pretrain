@@ -190,39 +190,49 @@ def train(dataloader, fold, args):
 
     # set up the writer
     writer = tensorboard.SummaryWriter(writer_dir, flush_secs=15)
-    mlflow_enabled = _is_mlflow_enabled() and (mlflow is not None) and _is_primary_process()
+
+    # MLflow: rank 0 logs metrics/params; ALL ranks upload per-rank log artifacts.
+    mlflow_ok = _is_mlflow_enabled() and (mlflow is not None)
+    mlflow_metrics = mlflow_ok and _is_primary_process()
     mlflow_started_here = False
     mlflow_run_id = None
-    if _is_mlflow_enabled() and (mlflow is not None) and not mlflow_enabled:
-        print("MLflow logging disabled on non-primary process to avoid duplicate metrics.")
-    if mlflow_enabled:
+
+    if mlflow_metrics:
         try:
-            mlflow_enabled, mlflow_started_here, mlflow_run_id = _setup_mlflow(args)
-            mlflow.log_params({
-                "exp_code": args.exp_code,
-                "task": args.task,
-                "epochs": int(args.epochs),
-                "save_interval_epochs": int(args.save_interval_epochs),
-                "autoresume": int(args.autoresume),
-                "batch_size": int(args.batch_size),
-                "gc": int(args.gc),
-                "lr_scheduler": str(args.lr_scheduler),
-                "blr": float(args.blr),
-                "optim": str(args.optim),
-                "optim_wd": float(args.optim_wd),
-                "root_path": str(args.root_path),
-                "save_dir": str(args.save_dir),
-                "report_to": str(args.report_to),
-                "mlflow_run_id": str(mlflow_run_id or ""),
-                "world_size": int(getattr(args, 'world_size', 1)),
-                "num_nodes": max(1, int(getattr(args, 'world_size', 1)) // max(1, torch.cuda.device_count())),
-                "gpus_per_node": torch.cuda.device_count(),
-                "fp16": str(getattr(args, 'fp16', False)),
-                "model_arch": str(getattr(args, 'model_arch', '')),
-            })
+            mlflow_metrics, mlflow_started_here, mlflow_run_id = _setup_mlflow(args)
+            if mlflow_metrics:
+                mlflow.log_params({
+                    "exp_code": args.exp_code,
+                    "task": args.task,
+                    "epochs": int(args.epochs),
+                    "save_interval_epochs": int(args.save_interval_epochs),
+                    "autoresume": int(args.autoresume),
+                    "batch_size": int(args.batch_size),
+                    "gc": int(args.gc),
+                    "lr_scheduler": str(args.lr_scheduler),
+                    "blr": float(args.blr),
+                    "optim": str(args.optim),
+                    "optim_wd": float(args.optim_wd),
+                    "root_path": str(args.root_path),
+                    "save_dir": str(args.save_dir),
+                    "report_to": str(args.report_to),
+                    "mlflow_run_id": str(mlflow_run_id or ""),
+                    "world_size": int(getattr(args, 'world_size', 1)),
+                    "num_nodes": max(1, int(getattr(args, 'world_size', 1)) // max(1, torch.cuda.device_count())),
+                    "gpus_per_node": torch.cuda.device_count(),
+                    "fp16": str(getattr(args, 'fp16', False)),
+                    "model_arch": str(getattr(args, 'model_arch', '')),
+                })
         except Exception as e:
             print(f"Warning: MLflow setup failed, continue without MLflow logging. Error: {e}")
-            mlflow_enabled = False
+            mlflow_metrics = False
+
+    # Share the run_id so every rank can upload its log artifact to the same run.
+    if mlflow_ok and getattr(args, 'world_size', 1) > 1:
+        run_id_list = [mlflow_run_id]
+        dist.broadcast_object_list(run_id_list, src=0)
+        mlflow_run_id = run_id_list[0]
+
     # set up writer
     if "wandb" in args.report_to:
         wandb.init(
@@ -305,7 +315,7 @@ def train(dataloader, fold, args):
                 log_dict = {'train_' + k: v for k, v in train_records.items() if 'prob' not in k and 'label' not in k}
                 log_dict.update({'val_' + k: v for k, v in val_records.items() if 'prob' not in k and 'label' not in k})
                 log_writer(log_dict, i, args.report_to, writer)
-                if mlflow_enabled:
+                if mlflow_metrics:
                     try:
                         mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=i)
                     except Exception as e:
@@ -331,17 +341,30 @@ def train(dataloader, fold, args):
         test_records = evaluate(test_loader, raw_model, fp16_scaler, loss_fn, eval_epoch, args)
         log_dict = {'test_' + k: v for k, v in test_records.items() if 'prob' not in k and 'label' not in k}
         log_writer(log_dict, fold, args.report_to, writer)
-        if mlflow_enabled:
+        if mlflow_metrics:
             try:
                 mlflow.log_metrics(_sanitize_mlflow_metrics(log_dict), step=int(args.epochs))
             except Exception as e:
                 print(f"Warning: MLflow test metric logging failed: {e}")
         wandb.finish() if "wandb" in args.report_to else None
-        if mlflow_enabled and mlflow_started_here:
-            try:
-                mlflow.end_run()
-            except Exception:
-                pass
+
+    # ALL ranks: upload per-rank log file as MLflow artifact.
+    rank_log_file = getattr(args, 'rank_log_file', None)
+    if mlflow_ok and mlflow_run_id and rank_log_file and os.path.exists(rank_log_file):
+        try:
+            sys.stdout.flush()
+            tracking_uri = os.environ.get("GIGAPATH_MLFLOW_TRACKING_URI", "databricks")
+            client = mlflow.MlflowClient(tracking_uri=tracking_uri)
+            client.log_artifact(mlflow_run_id, rank_log_file, artifact_path="rank_logs")
+            print(f"[rank {getattr(args, 'rank', 0)}] Uploaded log to MLflow artifacts/rank_logs/")
+        except Exception as e:
+            print(f"[rank {getattr(args, 'rank', 0)}] Warning: Failed to upload log artifact: {e}")
+
+    if is_main and mlflow_metrics and mlflow_started_here:
+        try:
+            mlflow.end_run()
+        except Exception:
+            pass
 
     return val_records, test_records
 

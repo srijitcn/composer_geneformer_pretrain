@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import torch.distributed as dist
 import pandas as pd
@@ -11,6 +12,28 @@ from utils import seed_torch, get_exp_code, get_splits, get_loader, save_obj
 from datasets.slide_datatset import SlideDataset
 
 
+class _TeeStream:
+    """Duplicate writes to both the original stream and a log file."""
+
+    def __init__(self, original, filepath):
+        self.original = original
+        self.file = open(filepath, "w", buffering=1)
+
+    def write(self, data):
+        self.original.write(data)
+        self.file.write(data)
+
+    def flush(self):
+        self.original.flush()
+        self.file.flush()
+
+    def fileno(self):
+        return self.original.fileno()
+
+    def isatty(self):
+        return self.original.isatty()
+
+
 if __name__ == '__main__':
     args = get_finetune_params()
 
@@ -18,6 +41,13 @@ if __name__ == '__main__':
     args.local_rank = int(os.environ.get("LOCAL_RANK", 0))
     args.rank = int(os.environ.get("RANK", 0))
     args.world_size = int(os.environ.get("WORLD_SIZE", 1))
+
+    # Tee each rank's stdout to a local log file.
+    # These files are uploaded as MLflow artifacts so every rank's output
+    # is visible in the UI, regardless of how torchrun routes console output.
+    args.rank_log_file = f"/tmp/gigapath_rank_{args.rank}.log"
+    sys.stdout = _TeeStream(sys.stdout, args.rank_log_file)
+
     if args.world_size > 1:
         dist.init_process_group(backend="nccl")
         torch.cuda.set_device(args.local_rank)

@@ -1,6 +1,7 @@
 experiment_name: gigapath-sgc-repo-guanyu
 environment:
   env_variables:
+    PYTHONUNBUFFERED: "1"
     NCCL_DEBUG: "INFO"
     NCCL_SOCKET_IFNAME: "eth"
     NCCL_IB_DISABLE: "1"
