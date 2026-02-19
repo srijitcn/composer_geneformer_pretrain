@@ -38,28 +38,29 @@ if __name__ == '__main__':
     seed_torch(device, args.seed)
 
     # load the task configuration
-    print('Loading task configuration from: {}'.format(args.task_cfg_path))
     args.task_config = load_task_config(args.task_cfg_path)
-    print(args.task_config)
     args.task = args.task_config.get('name', 'task')
     
     # set the experiment save directory
     args.save_dir = os.path.join(args.save_dir, args.task, args.exp_name)
-    args.model_code, args.task_code, args.exp_code = get_exp_code(args) # get the experiment code
+    args.model_code, args.task_code, args.exp_code = get_exp_code(args)
     args.save_dir = os.path.join(args.save_dir, args.exp_code)
     os.makedirs(args.save_dir, exist_ok=True)
-    print('Experiment code: {}'.format(args.exp_code))
-    print('Setting save directory: {}'.format(args.save_dir))
 
     # set the learning rate
     eff_batch_size = args.batch_size * args.gc * args.world_size
-    if args.lr is None or args.lr < 0:  # only base_lr is specified
+    if args.lr is None or args.lr < 0:
         args.lr = args.blr * eff_batch_size / 256
-    print("base lr: %.2e" % (args.lr * 256 / eff_batch_size))
-    print("actual lr: %.2e" % args.lr)
 
-    print("accumulate grad iterations: %d" % args.gc)
-    print("effective batch size: %d" % eff_batch_size)
+    if args.rank == 0:
+        print('Loading task configuration from: {}'.format(args.task_cfg_path))
+        print(args.task_config)
+        print('Experiment code: {}'.format(args.exp_code))
+        print('Setting save directory: {}'.format(args.save_dir))
+        print("base lr: %.2e" % (args.lr * 256 / eff_batch_size))
+        print("actual lr: %.2e" % args.lr)
+        print("accumulate grad iterations: %d" % args.gc)
+        print("effective batch size: %d" % eff_batch_size)
 
     # set the split key
     if args.pat_strat:
@@ -70,8 +71,9 @@ if __name__ == '__main__':
     # set up the dataset
     args.split_dir = os.path.join(args.split_dir, args.task_code) if not args.pre_split_dir else args.pre_split_dir
     os.makedirs(args.split_dir, exist_ok=True)
-    print('Setting split directory: {}'.format(args.split_dir))
-    dataset = pd.read_csv(args.dataset_csv) # read the dataset csv file
+    if args.rank == 0:
+        print('Setting split directory: {}'.format(args.split_dir))
+    dataset = pd.read_csv(args.dataset_csv)
 
     # use the slide dataset
     DatasetClass = SlideDataset

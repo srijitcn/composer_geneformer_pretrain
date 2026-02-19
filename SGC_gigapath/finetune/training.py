@@ -388,8 +388,9 @@ def train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, epoch,
                           seq_len/(batch_idx+1), batch['slide_id'][-1] if 'slide_id' in batch else 'None'))
 
     records['loss'] = records['loss'] / len(train_loader)
-    if is_main:
-        print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss))
+    rank = getattr(args, 'rank', 0)
+    print(f'[rank {rank}] Epoch: {epoch}, Loss: {records["loss"]:.4f}, '
+          f'Time: {time.time() - start_time:.1f}s, Avg seq len: {seq_len / max(len(train_loader), 1):.0f}')
     return records
 
 
