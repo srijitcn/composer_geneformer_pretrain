@@ -1,5 +1,5 @@
 echo ">>> Installing Geneformer"
-cd /composer_geneformer_pretrain
+cd /sgc_geneformer_pretrain/SGC_geneformer
 sh geneformer_prep.sh 
 
 echo ">>> Installing dependencies"
@@ -20,7 +20,7 @@ mkdir -p /pretrain/temp
 #sudo ./aws/install
 
 #echo ">>> Copying data from s3.. might take few mins"
-#cd /composer_geneformer_pretrain
+#cd /sgc_geneformer_pretrain
 #mkdir /Geneformer/data/dataset -p 
 #aws s3 cp s3://srijit-nair-sandbox-bucket/geneformer/data/token_dictionary.pkl /Geneformer/data/token_dictionary.pkl
 #aws s3 cp --recursive s3://srijit-nair-sandbox-bucket/geneformer/data/dataset /Geneformer/data/dataset

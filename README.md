@@ -1,13 +1,24 @@
 # Geneformer Pretraining with Serverless GPU CLI (SGCLI)
 
-This repository contains examples for running distributed training workloads on Databricks Serverless GPU compute using SGCLI.
+This repository contains everything needed to run distributed Geneformer pretraining on Databricks Serverless GPU compute (H100) using SGCLI and MosaicML Composer.
 
 ## Repository Structure
 
 ```
-├── SGC_hello_world/          # Simple hello world example (A10 GPUs)
-├── SGC_geneformer/           # Geneformer pretraining (H100 GPUs)
+├── SGC_geneformer/
+│   ├── train.yaml            # SGCLI workload definition
+│   ├── train.py              # Main training script (Composer)
+│   ├── parameters.yaml       # Training & data configuration
+│   ├── dependencies.yaml     # Conda-style environment spec
+│   ├── requirements.txt      # pip dependencies
+│   ├── commands.sh           # Entry script run by SGCLI
+│   ├── geneformer_prep.sh    # Installs Geneformer from HuggingFace
+│   ├── data_preparation.py   # Databricks notebook for one-time data prep
+│   ├── cfgutils.py           # Shared config/model utilities
+│   ├── inference_full.py     # Inference with full checkpoint
+│   └── inference_dcp.py      # Inference with distributed checkpoint
 ├── sgcli_wheel/              # SGCLI wheel package
+├── .gitignore
 └── README.md
 ```
 
@@ -25,7 +36,7 @@ This repository contains examples for running distributed training workloads on 
 
 ```bash
 git clone <repo-url>
-cd composer_geneformer_pretrain
+cd sgc_geneformer_pretrain
 ```
 
 ### Step 2: Install Databricks CLI
@@ -74,41 +85,7 @@ sgcli --help
 
 ---
 
-## Part 2: Run Hello World Example
-
-A simple test to verify SGCLI and GPU access are working.
-
-### Step 1: Update Configuration
-
-Edit `SGC_hello_world/train_workload.yaml`:
-
-```yaml
-experiment_name: torchrun-hello-world-<your-name>  # Change this
-code_source:
-  type: snapshot
-  snapshot:
-    repo_path: /path/to/your/local/repo  # Update to your local path
-```
-
-### Step 2: Submit the Workload
-
-```bash
-cd SGC_hello_world
-sgcli run -f train_workload.yaml --watch
-```
-
-The `--watch` flag streams logs to your terminal.
-
-### Expected Output
-
-You should see:
-- CUDA device detection
-- Matrix multiplication test
-- "CUDA is working!" message
-
----
-
-## Part 3: Geneformer Pretraining
+## Part 2: Geneformer Pretraining
 
 Full distributed pretraining of Geneformer on H100 GPUs.
 
@@ -141,9 +118,6 @@ Import `SGC_geneformer/data_preparation.py` as a Databricks notebook and run it 
 **Before running, update the configuration at the top:**
 
 ```python
-# ============================================
-# CONFIGURATION - UPDATE THESE VALUES
-# ============================================
 CATALOG = "main"              # Your catalog
 SCHEMA = "your_schema"        # Your schema
 VOLUME_NAME = "sgc"           # Your volume name
@@ -178,28 +152,20 @@ The notebook will:
 Edit `SGC_geneformer/parameters.yaml`:
 
 ```yaml
-# ============================================
-# Databricks Volume Configuration
-# ============================================
 volume:
   catalog: main              # Your catalog
-  schema: your_schema        # Your schema  
+  schema: your_schema        # Your schema
   volume_name: sgc           # Your volume name
 
-# Data paths relative to the volume root
 data:
   source_dataset: geneformer/data/dataset/genecorpus_30M_2048.dataset
   streaming_dataset: geneformer/data/dataset/streaming/genecorpus_30M_2048.dataset
   token_dictionary: geneformer/data/token_dictionary.pkl
   test_split_ratio: 0.1
 
-# Checkpoint path relative to volume root
 checkpoints:
   folder: geneformer/checkpoints
 
-# ============================================
-# Training Configuration
-# ============================================
 train_batch_size: 16          # Per-device batch size
 eval_batch_size: 16
 max_duration: 20ep            # Number of epochs
@@ -207,8 +173,8 @@ eval_interval: 5ep            # Evaluate every N epochs
 save_interval: 5ep            # Save checkpoint every N epochs
 
 # For quick testing, use subset of batches (-1 = use all)
-train_subset_num_batches: 100  # Set to -1 for full training
-eval_subset_num_batches: 10    # Set to -1 for full eval
+train_subset_num_batches: 100
+eval_subset_num_batches: 10
 ```
 
 #### 2.2 Update `train.yaml`
@@ -220,7 +186,7 @@ experiment_name: geneformer-<your-name>  # Change this
 
 compute:
   gpus: 16                    # Number of GPUs (8 = 1 node, 16 = 2 nodes)
-  gpu_type: h100              # GPU type
+  gpu_type: h100
 
 code_source:
   type: snapshot
@@ -256,9 +222,9 @@ sgcli run -f train.yaml --watch
 
 ---
 
-## Part 4: Testing Failure Recovery (Optional)
+## Part 3: Testing Failure Recovery (Optional)
 
-This section describes how to test checkpoint recovery and autoresume functionality by intentionally failing training at a specific epoch.
+Test checkpoint recovery and autoresume by intentionally failing training at a specific epoch.
 
 ### Overview
 
@@ -273,16 +239,12 @@ The `FailureTestCallback` allows you to:
 Edit `SGC_geneformer/parameters.yaml`:
 
 ```yaml
-# Auto resume (required for failure recovery)
 autoresume: True
 
-# ============================================
-# Failure Test Configuration
-# ============================================
 failure_test:
-  enabled: true           # Enable failure testing
-  fail_at_epoch: 7        # Fail at epoch 7 (0-indexed)
-  max_failures: 3         # Fail 3 times, then continue on 4th attempt
+  enabled: true
+  fail_at_epoch: 7
+  max_failures: 3
 ```
 
 ### Step 2: Configure SGCLI Retries
@@ -293,16 +255,13 @@ Edit `SGC_geneformer/train.yaml`:
 max_retries: 3  # Must be >= max_failures for automatic recovery
 ```
 
-**Important**: Set `max_retries` >= `max_failures` so SGCLI automatically restarts the job after each failure.
-
 ### Step 3: Configure Checkpoints
 
 Ensure checkpoints are saved before the failure epoch:
 
 ```yaml
-# parameters.yaml
-save_interval: 5ep        # Save checkpoint every 5 epochs
-max_duration: 20ep        # Total training duration
+save_interval: 5ep
+max_duration: 20ep
 ```
 
 With `fail_at_epoch: 7` and `save_interval: 5ep`, a checkpoint is saved at epoch 5 before the failure at epoch 7.
@@ -323,35 +282,12 @@ sgcli run -f train.yaml --watch
 | 3 | Resume from epoch 5, fail at epoch 7 |
 | 4 | Resume from epoch 5, **skip failure**, complete training |
 
-### Console Output
-
-**On failure (attempts 1-3):**
-```
-============================================================
-💥 INTENTIONAL FAILURE (Test Mode)
-============================================================
-  Epoch: 7
-  Failure count: 2/3
-  Remaining failures: 1
-============================================================
-```
-
-**On successful continue (attempt 4):**
-```
-============================================================
-✅ FAILURE TEST: Skipping failure (already failed 3 times)
-   Training will continue normally from checkpoint
-============================================================
-```
-
 ### How It Works
 
 1. **Failure counter**: Stored in `{checkpoint_folder}/failure_counter.json`
 2. **Distributed sync**: Uses `torch.distributed.broadcast` to ensure all ranks fail/continue together
 3. **Persistence**: Counter persists across job restarts via the shared volume
 4. **Auto-reset**: Counter resets when training completes successfully
-
-### Disable After Testing
 
 Remember to disable failure testing for production runs:
 
@@ -406,8 +342,8 @@ For multi-node training, adjust timeouts in `train.yaml`:
 ```yaml
 environment:
   env_variables:
-    NCCL_TIMEOUT: "1800"                      # 30 min
-    TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"   # 30 min
+    NCCL_TIMEOUT: "1800"
+    TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
 ```
 
 ### Data Not Found
@@ -420,14 +356,9 @@ If training fails with "DATA NOT FOUND":
 ### Checking Job Status
 
 ```bash
-# List recent jobs
-sgcli list
-
-# Get job details
-sgcli status <job-id>
-
-# Cancel a job
-sgcli cancel <job-id>
+sgcli list             # List recent jobs
+sgcli status <job-id>  # Get job details
+sgcli cancel <job-id>  # Cancel a job
 ```
 
 ---
@@ -435,8 +366,7 @@ sgcli cancel <job-id>
 ## Quick Start Checklist
 
 - [ ] Install Databricks CLI and authenticate
-- [ ] Install SGCLI wheel
-- [ ] Run Hello World to verify setup
+- [ ] Install SGCLI
 - [ ] Create Unity Catalog volume
 - [ ] Run data preparation notebook (CPU cluster)
 - [ ] Update `parameters.yaml` with your volume paths
