@@ -8,6 +8,9 @@ environment:
     NCCL_TIMEOUT: "1800"
     TORCH_NCCL_BLOCKING_WAIT: "1"
     TORCH_DIST_INIT_BARRIER_TIMEOUT: "1800"
+    # MLflow: system metrics (GPU util, CPU, memory) in Databricks UI
+    MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING: "true"
+    GIGAPATH_MLFLOW_EXPERIMENT: "/mlflow_experiments/gigapath_finetuning"
     # Optional: set HuggingFace token only if using pretrained hub weights.
     # HF_TOKEN: "<your_hf_token>"
     GIGAPATH_ROOT_PATH: /Volumes/main/guanyu_chen/sgc/gigapath/data/dinov2_features/GigaPath_PANDA_embeddings/h5_files

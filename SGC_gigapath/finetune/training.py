@@ -61,14 +61,19 @@ def _is_primary_process() -> bool:
 
 def _setup_mlflow(args):
     """
-    Prefer the active SGC-provided MLflow run context.
-    Only create a run if none exists.
+    Configure MLflow tracking to match Composer/geneformer conventions.
+    Uses the SGC-provided active run if one exists, otherwise creates a new run
+    under the configured experiment.
     """
     if mlflow is None:
         return False, False, None
 
     tracking_uri = os.environ.get("GIGAPATH_MLFLOW_TRACKING_URI", "databricks")
     mlflow.set_tracking_uri(tracking_uri)
+
+    experiment_name = os.environ.get("GIGAPATH_MLFLOW_EXPERIMENT", "")
+    if experiment_name:
+        mlflow.set_experiment(experiment_name)
 
     active = mlflow.active_run()
     started_here = False
@@ -82,6 +87,7 @@ def _setup_mlflow(args):
     print(
         "MLflow configured: "
         f"tracking_uri={tracking_uri}, "
+        f"experiment_name={experiment_name or '(default)'}, "
         f"experiment_id={exp_id}, run_id={run_id}"
     )
 
@@ -208,6 +214,11 @@ def train(dataloader, fold, args):
                 "save_dir": str(args.save_dir),
                 "report_to": str(args.report_to),
                 "mlflow_run_id": str(mlflow_run_id or ""),
+                "world_size": int(getattr(args, 'world_size', 1)),
+                "num_nodes": max(1, int(getattr(args, 'world_size', 1)) // max(1, torch.cuda.device_count())),
+                "gpus_per_node": torch.cuda.device_count(),
+                "fp16": str(getattr(args, 'fp16', False)),
+                "model_arch": str(getattr(args, 'model_arch', '')),
             })
         except Exception as e:
             print(f"Warning: MLflow setup failed, continue without MLflow logging. Error: {e}")
@@ -266,11 +277,13 @@ def train(dataloader, fold, args):
     raw_model = model.module if hasattr(model, 'module') else model
     is_main = getattr(args, 'rank', 0) == 0
 
-    if is_main:
-        print('Training on {} samples'.format(len(train_loader.dataset)))
-        print('Validating on {} samples'.format(len(val_loader.dataset))) if val_loader is not None else None
-        print('Testing on {} samples'.format(len(test_loader.dataset))) if test_loader is not None else None
-        print('Training starts!')
+    rank = getattr(args, 'rank', 0)
+    print(f'[rank {rank}] Training on {len(train_loader.dataset)} samples')
+    if val_loader is not None:
+        print(f'[rank {rank}] Validating on {len(val_loader.dataset)} samples')
+    if test_loader is not None:
+        print(f'[rank {rank}] Testing on {len(test_loader.dataset)} samples')
+    print(f'[rank {rank}] Training starts!')
 
     # test evaluate function
     # val_records = evaluate(val_loader, model, fp16_scaler, loss_fn, 0, args)
@@ -282,8 +295,7 @@ def train(dataloader, fold, args):
         last_epoch_ran = i
         if hasattr(train_loader.sampler, 'set_epoch'):
             train_loader.sampler.set_epoch(i)
-        if is_main:
-            print('Epoch: {}'.format(i))
+        print(f'[rank {rank}] Epoch: {i}')
         train_records = train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, i, args)
 
         if is_main:
@@ -381,11 +393,13 @@ def train_one_epoch(train_loader, model, fp16_scaler, optimizer, loss_fn, epoch,
 
         records['loss'] += loss.item() * args.gc
 
-        if is_main and (batch_idx + 1) % 20 == 0:
+        if (batch_idx + 1) % 20 == 0:
+            rank = getattr(args, 'rank', 0)
             time_per_it = (time.time() - start_time) / (batch_idx + 1)
-            print('Epoch: {}, Batch: {}, Loss: {:.4f}, LR: {:.4f}, Time: {:.4f} sec/it, Seq len: {:.1f}, Slide ID: {}' \
-                  .format(epoch, batch_idx, records['loss']/batch_idx, optimizer.param_groups[0]['lr'], time_per_it, \
-                          seq_len/(batch_idx+1), batch['slide_id'][-1] if 'slide_id' in batch else 'None'))
+            print(f'[rank {rank}] Epoch: {epoch}, Batch: {batch_idx}, Loss: {records["loss"]/batch_idx:.4f}, '
+                  f'LR: {optimizer.param_groups[0]["lr"]:.4f}, Time: {time_per_it:.4f} sec/it, '
+                  f'Seq len: {seq_len/(batch_idx+1):.1f}, '
+                  f'Slide ID: {batch["slide_id"][-1] if "slide_id" in batch else "None"}')
 
     records['loss'] = records['loss'] / len(train_loader)
     rank = getattr(args, 'rank', 0)
