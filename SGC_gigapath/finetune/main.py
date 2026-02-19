@@ -12,28 +12,6 @@ from utils import seed_torch, get_exp_code, get_splits, get_loader, save_obj
 from datasets.slide_datatset import SlideDataset
 
 
-class _TeeStream:
-    """Duplicate writes to both the original stream and a log file."""
-
-    def __init__(self, original, filepath):
-        self.original = original
-        self.file = open(filepath, "w", buffering=1)
-
-    def write(self, data):
-        self.original.write(data)
-        self.file.write(data)
-
-    def flush(self):
-        self.original.flush()
-        self.file.flush()
-
-    def fileno(self):
-        return self.original.fileno()
-
-    def isatty(self):
-        return self.original.isatty()
-
-
 if __name__ == '__main__':
     args = get_finetune_params()
 
@@ -42,11 +20,17 @@ if __name__ == '__main__':
     args.rank = int(os.environ.get("RANK", 0))
     args.world_size = int(os.environ.get("WORLD_SIZE", 1))
 
-    # Tee each rank's stdout to a local log file.
-    # These files are uploaded as MLflow artifacts so every rank's output
-    # is visible in the UI, regardless of how torchrun routes console output.
-    args.rank_log_file = f"/tmp/gigapath_rank_{args.rank}.log"
-    sys.stdout = _TeeStream(sys.stdout, args.rank_log_file)
+    # Write non-local-rank-0 stdout to per-GPU log files that the SGC platform
+    # automatically picks up as artifacts (gpu_{local_rank}-0.chunk.txt).
+    # This replicates what Composer's launcher does natively.
+    _platform = os.environ.get("MOSAICML_PLATFORM", "false").lower() == "true"
+    _log_dir = os.environ.get("MOSAICML_LOG_DIR", "false")
+    _log_prefix = os.environ.get("MOSAICML_GPU_LOG_FILE_PREFIX", "false")
+    if args.local_rank != 0 and _platform and _log_dir.lower() != "false" and _log_prefix.lower() != "false":
+        _log_path = os.path.join(_log_dir, f"{_log_prefix}{args.local_rank}.txt")
+        _log_file = open(_log_path, "a", buffering=1)
+        sys.stdout = _log_file
+        sys.stderr = _log_file
 
     if args.world_size > 1:
         dist.init_process_group(backend="nccl")
