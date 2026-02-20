@@ -20,14 +20,15 @@ if __name__ == '__main__':
     args.rank = int(os.environ.get("RANK", 0))
     args.world_size = int(os.environ.get("WORLD_SIZE", 1))
 
-    # Write non-local-rank-0 stdout to per-GPU log files that the SGC platform
-    # automatically picks up as artifacts (gpu_{local_rank}-0.chunk.txt).
-    # This replicates what Composer's launcher does natively.
+    # Redirect non-rank-0 stdout/stderr to per-GPU log files picked up by the
+    # SGC platform as artifacts.  Use *global* rank so that (a) node1's
+    # local_rank=0 process doesn't silently lose its output to an uncaptured
+    # stdout, and (b) filenames are unique across nodes (gpu_0 … gpu_15).
     _platform = os.environ.get("MOSAICML_PLATFORM", "false").lower() == "true"
     _log_dir = os.environ.get("MOSAICML_LOG_DIR", "false")
     _log_prefix = os.environ.get("MOSAICML_GPU_LOG_FILE_PREFIX", "false")
-    if args.local_rank != 0 and _platform and _log_dir.lower() != "false" and _log_prefix.lower() != "false":
-        _log_path = os.path.join(_log_dir, f"{_log_prefix}{args.local_rank}.txt")
+    if args.rank != 0 and _platform and _log_dir.lower() != "false" and _log_prefix.lower() != "false":
+        _log_path = os.path.join(_log_dir, f"{_log_prefix}{args.rank}.txt")
         _log_file = open(_log_path, "a", buffering=1)
         sys.stdout = _log_file
         sys.stderr = _log_file

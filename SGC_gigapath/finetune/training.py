@@ -321,6 +321,9 @@ def train(dataloader, fold, args):
             if int(args.save_interval_epochs) > 0 and ((i + 1) % int(args.save_interval_epochs) == 0):
                 save_training_state(i, f"checkpoint_epoch_{i+1}.pt")
 
+        if getattr(args, 'world_size', 1) > 1:
+            dist.barrier()
+
     if is_main:
         selected_ckpt = os.path.join(model_dir, "checkpoint.pt")
         if os.path.exists(selected_ckpt):
