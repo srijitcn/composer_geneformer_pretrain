@@ -115,6 +115,8 @@ if __name__ == '__main__':
         if args.rank == 0:
             records = {'val': val_records, 'test': test_records}
             for record_ in records:
+                if records[record_] is None:
+                    continue
                 for key in records[record_]:
                     if 'prob' in key or 'label' in key:
                         continue
