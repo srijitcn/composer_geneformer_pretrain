@@ -31,7 +31,7 @@ The original repository provides single-GPU training scripts. This adaptation pr
 ## Prerequisites
 
 - A Databricks workspace with **Serverless GPU Compute (SGC)** enabled
-- **SGCLI** installed locally: `pip install databricks-sgcli`
+- **SGCLI** installed locally from the internal wheel (not yet on PyPI): `pip install /path/to/databricks_sgcli-*.whl`
 - A **HuggingFace account** with access to the [Prov-GigaPath model](https://huggingface.co/prov-gigapath/prov-gigapath) (accept the license terms)
 - A **Unity Catalog Volume** on Databricks for storing data and model artifacts
 
@@ -53,7 +53,7 @@ Run `model_preparation.py` as a Databricks notebook. It downloads `slide_encoder
 After this step you will have a path like:
 
 ```
-/Volumes/main/<schema>/<volume>/gigapath/model/slide_encoder.pth
+/Volumes/<catalog>/<schema>/<volume>/gigapath/model/slide_encoder.pth
 ```
 
 ### 3. Configure `train.yaml`
@@ -63,9 +63,9 @@ Edit `train.yaml` to point at your data and model paths:
 ```yaml
 environment:
   env_variables:
-    GIGAPATH_ROOT_PATH: /Volumes/main/<schema>/<volume>/gigapath/data/<path_to_h5_files>
-    GIGAPATH_OUTPUT_DIR: /Volumes/main/<schema>/<volume>/gigapath/outputs/
-    GIGAPATH_PRETRAINED: /Volumes/main/<schema>/<volume>/gigapath/model/slide_encoder.pth
+    GIGAPATH_ROOT_PATH: /Volumes/<catalog>/<schema>/<volume>/gigapath/data/<path_to_h5_files>
+    GIGAPATH_OUTPUT_DIR: /Volumes/<catalog>/<schema>/<volume>/gigapath/outputs/
+    GIGAPATH_PRETRAINED: /Volumes/<catalog>/<schema>/<volume>/gigapath/model/slide_encoder.pth
     GIGAPATH_EPOCHS: "200"
     GIGAPATH_SAVE_INTERVAL_EPOCHS: "5"
     GIGAPATH_AUTORESUME: "1"
@@ -91,12 +91,12 @@ cd SGC_gigapath
 sgcli run -f train.yaml --watch
 ```
 
-`--watch` streams logs to your terminal. You can also use:
+`--watch` streams logs to your terminal. Other useful commands:
 
 ```bash
-sgcli list              # list recent jobs
-sgcli status <job-id>   # check job status
-sgcli cancel <job-id>   # cancel a running job
+sgcli get runs                          # list recent runs
+sgcli get status <run-id> -p profile    # check run status
+sgcli get logs <run-id> -p profile      # fetch run logs
 ```
 
 ## Configuration Reference
