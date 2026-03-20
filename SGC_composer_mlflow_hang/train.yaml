@@ -1,0 +1,21 @@
+experiment_name: composer-mlflow-hang-repro
+run_name: composer-mlflow-hang-test
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+    SIMULATE_MLFLOW_HANG: "false"
+    MLFLOW_HANG_MINUTES: "180"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 2
+  gpu_type: a10
+max_retries: 0
+code_source:
+  type: snapshot
+  snapshot:
+    allow_uncommitted: true
+    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+command: |-
+  cd $HOME/composer_geneformer_pretrain/SGC_composer_mlflow_hang
+  echo ">>> Starting Composer MLflow hang repro"
+  composer train.py

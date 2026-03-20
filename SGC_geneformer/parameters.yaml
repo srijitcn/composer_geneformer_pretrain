@@ -86,7 +86,7 @@ eval_batch_size: 16
 device_train_microbatch_size: 16
 train_subset_num_batches: 512  # -1 means use all batches
 eval_subset_num_batches: 128   # -1 means use all batches
-max_duration: 140ep
+max_duration: 150ep
 eval_interval: 10ep
 
 # Logging
