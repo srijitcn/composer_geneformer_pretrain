@@ -47,6 +47,8 @@ loggers:
   mlflow:
     tracking_uri: databricks
     experiment_name: mlflow_experiments/geneformer_pretraining
+    simulate_hang: true            # ES-1788744 repro: hang in monitor.finish()
+    hang_duration_minutes: 180     # How long to hang (3 hours)
 
 device : gpu
 seed_val : 42

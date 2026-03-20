@@ -1,0 +1,11 @@
+mosaicml==0.32.1
+mlflow>=3.6.0
+mosaicml-streaming==0.13.0
+transformers==4.44.0
+datasets==2.21.0
+boto3
+omegaconf
+tqdm
+
+
+

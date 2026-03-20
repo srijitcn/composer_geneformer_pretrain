@@ -1,0 +1,10 @@
+version: "4"
+dependencies:
+  - mosaicml==0.32.1          # NO [mlflow] extra!
+  - mlflow>=3.6.0             # Install separately
+  - mosaicml-streaming==0.13.0
+  - transformers==4.44.0
+  - datasets==2.21.0
+  - boto3
+  - omegaconf
+  - tqdm

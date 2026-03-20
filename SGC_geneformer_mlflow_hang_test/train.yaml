@@ -7,8 +7,8 @@
 # - integrations: Extra inputs are not permitted
 # - scheduling: Extra inputs are not permitted
 
-experiment_name: geneformer-sgc-repo-guanyu
-run_name: geneformer-sgc-repo-guanyu-test-run
+experiment_name: geneformer-sgc-mlflow-hang-repro
+run_name: geneformer-mlflow-hang-test
 environment:
   env_variables:
     # NCCL settings for multi-node H100 training
@@ -35,7 +35,7 @@ code_source:
     allow_uncommitted: true
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
 command: |-
-  cd $HOME/composer_geneformer_pretrain/SGC_geneformer
+  cd $HOME/composer_geneformer_pretrain/SGC_geneformer_mlflow_hang_test
   echo ">>> In final training folder"
   sh commands.sh
   echo ">>> Starting training" 
