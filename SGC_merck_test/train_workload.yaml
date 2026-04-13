@@ -10,7 +10,7 @@ max_retries: 0
 code_source:
   type: snapshot
   snapshot:
-    path: /Workspace/Shared/test/sgc_cli
+    repo_path: /Workspace/Shared/test/sgc_cli
 command: |-
   echo ">>> Starting dependency compatibility test"
   echo ">>> CODE_SOURCE_PATH=$CODE_SOURCE_PATH"
