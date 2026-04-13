@@ -1,7 +1,7 @@
 experiment_name: sgc-dep-test
-environment:
-  env_variables:
+env_variables:
     NCCL_DEBUG: "INFO"
+environment:
   dependencies: dependencies.yaml
 compute:
   gpus: 8
@@ -10,8 +10,9 @@ max_retries: 0
 code_source:
   type: snapshot
   snapshot:
-    allow_uncommitted: true
+    # allow_uncommitted: true
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+    git_branch: test/dep-test
     include_paths:
       - SGC_dep_test
 command: |-
