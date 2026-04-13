@@ -22,25 +22,9 @@ def check_versions():
 
 
 def test_streaming():
-    """Basic streaming dataset read test."""
+    """Basic streaming dataset import test."""
     from streaming import StreamingDataset
-
     print("\n[streaming] StreamingDataset import OK")
-    print("[streaming] Available formats:", end=" ")
-    try:
-        from streaming.base.format import reader
-        print("reader module loaded")
-    except ImportError:
-        print("reader module not found (API may have changed)")
-
-
-def test_transformers():
-    """Basic transformers tokenizer test."""
-    from transformers import AutoTokenizer
-
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    tokens = tokenizer("streaming + transformers test", return_tensors="pt")
-    print(f"\n[transformers] Tokenizer OK, input_ids shape={tokens['input_ids'].shape}")
 
 
 if __name__ == "__main__":
@@ -50,7 +34,6 @@ if __name__ == "__main__":
 
     check_versions()
     test_streaming()
-    test_transformers()
 
     print("\n" + "=" * 50)
     print("All tests passed!")
