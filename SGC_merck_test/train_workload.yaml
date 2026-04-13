@@ -10,10 +10,10 @@ max_retries: 0
 code_source:
   type: snapshot
   snapshot:
-    repo_path: /Workspace/Shared/test/sgc_cli
+    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
 command: |-
   echo ">>> Starting dependency compatibility test"
   echo ">>> CODE_SOURCE_PATH=$HOME"
 
-  cd $HOME
+  cd $HOME/composer_geneformer_pretrain/SGC_merck_test
   python test_deps.py
