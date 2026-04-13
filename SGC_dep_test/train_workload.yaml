@@ -4,14 +4,14 @@ experiment_name: sgc-dep-test
 environment:
   dependencies: dependencies.yaml
 compute:
-  gpus: 8
-  gpu_type: H100
+  gpus: 2
+  gpu_type: A10
 max_retries: 0
 code_source:
   type: snapshot
   snapshot:
     # allow_uncommitted: true
-    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/SGC_dep_test
     # git_branch: test/dep-test
     # include_paths:
       # - SGC_dep_test
