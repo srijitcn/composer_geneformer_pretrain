@@ -13,7 +13,7 @@ code_source:
     repo_path: /Workspace/Shared/test/sgc_cli
 command: |-
   echo ">>> Starting dependency compatibility test"
-  echo ">>> CODE_SOURCE_PATH=$CODE_SOURCE_PATH"
+  echo ">>> CODE_SOURCE_PATH=$HOME"
 
-  cd $CODE_SOURCE_PATH
+  cd $HOME
   python test_deps.py
