@@ -1,4 +1,5 @@
 experiment_name: merck-dep-test
+experiment_directory: /Workspace/Shared/test/sgc_cli
 env_variables:
     NCCL_DEBUG: "INFO"
 environment:
