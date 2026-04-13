@@ -17,8 +17,8 @@ code_source:
       - SGC_dep_test
 command: |-
   echo ">>> Starting dependency compatibility test"
-  echo ">>> CODE_SOURCE_PATH=$CODE_SOURCE_PATH"
-  ls -la $CODE_SOURCE_PATH/SGC_dep_test/
+  echo ">>> CODE_SOURCE_PATH=$HOME"
+  ls -la $HOME/SGC_dep_test/
 
-  cd $CODE_SOURCE_PATH/SGC_dep_test
+  cd $HOME/SGC_dep_test
   python test_deps.py
