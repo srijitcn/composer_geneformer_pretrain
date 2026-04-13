@@ -8,8 +8,8 @@ compute:
   gpu_type: H100
 max_retries: 0
 code_source:
-  type: workspace
-  workspace:
+  type: snapshot
+  snapshot:
     path: /Workspace/Shared/test/sgc_cli
 command: |-
   echo ">>> Starting dependency compatibility test"
