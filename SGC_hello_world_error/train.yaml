@@ -1,0 +1,19 @@
+experiment_name: hello-world-error-test
+run_name: hello-world-init-error
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 8
+  gpu_type: H100
+max_retries: 0
+code_source:
+  type: snapshot
+  snapshot:
+    allow_uncommitted: true
+    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+command: |-
+  cd $HOME/composer_geneformer_pretrain/SGC_hello_world_error
+  echo ">>> Starting hello world error test"
+  python train.py

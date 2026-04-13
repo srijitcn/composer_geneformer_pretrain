@@ -1,0 +1,4 @@
+version: "4"
+dependencies:
+  - transformers==4.44.0
+  - mosaicml-streaming==0.13.0

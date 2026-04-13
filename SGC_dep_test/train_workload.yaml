@@ -1,0 +1,23 @@
+experiment_name: sgc-dep-test
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 8
+  gpu_type: H100
+max_retries: 0
+code_source:
+  type: snapshot
+  snapshot:
+    allow_uncommitted: true
+    repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
+    include_paths:
+      - SGC_dep_test
+command: |-
+  echo ">>> Starting dependency compatibility test"
+  echo ">>> CODE_SOURCE_PATH=$CODE_SOURCE_PATH"
+  ls -la $CODE_SOURCE_PATH/SGC_dep_test/
+
+  cd $CODE_SOURCE_PATH/SGC_dep_test
+  python test_deps.py
