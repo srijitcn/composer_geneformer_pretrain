@@ -1,4 +1,5 @@
 version: "4"
 dependencies:
+  - torch==2.9.0
   - transformers>=5.0.0
-  - mosaicml-streaming==0.13.0
+  - mosaicml-streaming==0.13.0 --no-deps
