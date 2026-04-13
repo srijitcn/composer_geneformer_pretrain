@@ -1,7 +1,7 @@
 experiment_name: merck-dep-test
-environment:
-  env_variables:
+env_variables:
     NCCL_DEBUG: "INFO"
+environment:
   dependencies: dependencies.yaml
 compute:
   gpus: 64
