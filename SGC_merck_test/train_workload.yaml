@@ -1,0 +1,19 @@
+experiment_name: merck-dep-test
+environment:
+  env_variables:
+    NCCL_DEBUG: "INFO"
+  dependencies: dependencies.yaml
+compute:
+  gpus: 64
+  gpu_type: H100
+max_retries: 0
+code_source:
+  type: workspace
+  workspace:
+    path: /Workspace/Shared/test/sgc_cli
+command: |-
+  echo ">>> Starting dependency compatibility test"
+  echo ">>> CODE_SOURCE_PATH=$CODE_SOURCE_PATH"
+
+  cd $CODE_SOURCE_PATH
+  python test_deps.py
