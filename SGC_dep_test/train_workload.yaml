@@ -1,6 +1,6 @@
 experiment_name: sgc-dep-test
-env_variables:
-    NCCL_DEBUG: "INFO"
+# env_variables:
+#     NCCL_DEBUG: "INFO"
 environment:
   dependencies: dependencies.yaml
 compute:
@@ -12,9 +12,9 @@ code_source:
   snapshot:
     # allow_uncommitted: true
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
-    git_branch: test/dep-test
-    include_paths:
-      - SGC_dep_test
+    # git_branch: test/dep-test
+    # include_paths:
+      # - SGC_dep_test
 command: |-
   echo ">>> Starting dependency compatibility test"
   echo ">>> CODE_SOURCE_PATH=$HOME"
