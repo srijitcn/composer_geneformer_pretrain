@@ -4,8 +4,8 @@ experiment_name: sgc-dep-test
 environment:
   dependencies: dependencies.yaml
 compute:
-  gpus: 2
-  gpu_type: A10
+  gpus: 8
+  gpu_type: h100
 max_retries: 0
 code_source:
   type: snapshot
