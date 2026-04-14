@@ -16,6 +16,9 @@ code_source:
     # include_paths:
       # - SGC_dep_test
 command: |-
+  echo ">>> Upgrading transformers after streaming install"
+  pip install "transformers>=5.0.0"
+
   echo ">>> Starting dependency compatibility test"
   echo ">>> CODE_SOURCE_PATH=$HOME"
   ls -la $HOME/SGC_dep_test/
