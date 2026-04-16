@@ -1,7 +1,7 @@
 experiment_name: torchrun-hello-world
-environment:
-  env_variables:
+env_variables:
     NCCL_DEBUG: "INFO"
+environment:
   dependencies: dependencies.yaml
 compute:
   gpus: 8
@@ -10,7 +10,7 @@ max_retries: 0
 code_source:
   type: snapshot
   snapshot:
-    allow_uncommitted: true
+    # allow_uncommitted: true
     # repo_path is local path for your repo, and changes git commit is required for job submission
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
 command: |-
@@ -20,8 +20,8 @@ command: |-
   cd $HOME/composer_geneformer_pretrain/SGC_hello_world
   
   torchrun \
-    --nnodes=2 \
-    --nproc_per_node=1 \
+    --nnodes=1 \
+    --nproc_per_node=8 \
     --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
