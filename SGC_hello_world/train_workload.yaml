@@ -14,6 +14,15 @@ code_source:
     # repo_path is local path for your repo, and changes git commit is required for job submission
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
 command: |-
+  echo "HOME=$HOME"                                                                                                                                                                                                                                                                                         
+  echo "CODE_SOURCE_PATH=${CODE_SOURCE_PATH:-UNSET}"                                                                                                                                                                                                                                                        
+  echo "--- ls -la \$HOME ---"                                                                                                                                                                                                                                                                              
+  ls -la "$HOME"                                                                                                                                                                                                                                                                                            
+  echo "--- ls -la \$CODE_SOURCE_PATH ---"                                                                                                                                                                                                                                                                  
+  ls -la "${CODE_SOURCE_PATH:-/databricks/code_source}" 2>&1 | head -30                                                                                                                                                                                                                                     
+  echo "--- readlink any symlinks in \$HOME ---"                                                                                                                                                                                                                                                            
+  for f in "$HOME"/*; do [ -L "$f" ] && echo "$f -> $(readlink "$f")"; done
+  
   echo ">>> In SGC_hello_world folder, starting training"
   
   #Repo is in $HOME, so cd relative to $HOME
