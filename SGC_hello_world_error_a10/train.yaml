@@ -1,11 +1,11 @@
-experiment_name: hello-world-error-h100
+experiment_name: hello-world-error-a10
 environment:
   env_variables:
     NCCL_DEBUG: "INFO"
   dependencies: dependencies.yaml
 compute:
-  gpus: 8
-  gpu_type: H100
+  gpus: 2
+  gpu_type: a10
 max_retries: 0
 code_source:
   type: snapshot
@@ -13,8 +13,8 @@ code_source:
     allow_uncommitted: true
     repo_path: /Users/guanyu.chen/Documents/Projects/composer_geneformer_pretrain/
     include_paths:
-      - SGC_hello_world_error
+      - SGC_hello_world_error_a10
 command: |-
-  echo ">>> Hello world error test (H100)"
-  cd $CODE_SOURCE_PATH/SGC_hello_world_error
+  echo ">>> Hello world error test (A10)"
+  cd $CODE_SOURCE_PATH/SGC_hello_world_error_a10
   python train.py
